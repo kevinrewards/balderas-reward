@@ -725,6 +725,127 @@ $("visitPeriod").onchange = () => {
   );
 
 };
+// ==========================================
+// BALDERAS SUPERADMIN - NEGOCIOS
+// ==========================================
+
+async function openBusinessAdmin() {
+
+  const modal = $("businessAdminModal");
+  const list = $("businessAdminList");
+
+  if (!modal || !list) return;
+
+  modal.hidden = false;
+  list.innerHTML = "<p>Cargando negocios...</p>";
+
+  const { data, error } =
+    await db.rpc("admin_list_businesses");
+
+  if (error) {
+
+    console.error(error);
+
+    list.innerHTML = `
+      <p class="error">
+        No se pudieron cargar los negocios.
+      </p>
+    `;
+
+    return;
+  }
+
+  if (!data || data.length === 0) {
+
+    list.innerHTML = `
+      <div class="businessAdminEmpty">
+        Todavía no hay negocios registrados.
+      </div>
+    `;
+
+    return;
+  }
+
+  list.innerHTML = data.map(business => `
+
+    <div class="businessAdminItem">
+
+      <div class="businessAdminTop">
+
+        <div>
+          <strong>
+            ${escapeHtml(business.business_name)}
+          </strong>
+
+          <div class="muted">
+            ${escapeHtml(business.business_slug)}
+          </div>
+        </div>
+
+        <span class="businessStatus">
+          ${business.business_active
+            ? "● ACTIVO"
+            : "○ INACTIVO"}
+        </span>
+
+      </div>
+
+      <div class="businessAdminInfo">
+
+        <div>
+          <span>OWNER</span>
+          <strong>
+            ${business.owner_name
+              ? escapeHtml(business.owner_name)
+              : "Sin asignar"}
+          </strong>
+        </div>
+
+        <div>
+          <span>CLIENTES</span>
+          <strong>
+            ${business.customer_count}
+          </strong>
+        </div>
+
+      </div>
+
+      <button
+        type="button"
+        class="secondary businessManageButton"
+        data-business-id="${business.business_id}">
+        Administrar
+      </button>
+
+    </div>
+
+  `).join("");
+}
+
+
+// Abrir negocios
+const manageBusinessesButton =
+  $("manageBusinesses");
+
+if (manageBusinessesButton) {
+
+  manageBusinessesButton.onclick =
+    openBusinessAdmin;
+
+}
+
+
+// Cerrar negocios
+const closeBusinessAdminButton =
+  $("closeBusinessAdmin");
+
+if (closeBusinessAdminButton) {
+
+  closeBusinessAdminButton.onclick = () => {
+    $("businessAdminModal").hidden = true;
+  };
+
+}
 /* COMPROBAR SESIÓN */
 
 (async () => {
