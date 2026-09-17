@@ -1341,7 +1341,52 @@ if (newBusinessForm) {
 
         }
 
+// -----------------------------
+// 4. CREAR OWNER
+// -----------------------------
 
+const ownerName =
+  $("newOwnerName")
+    .value.trim();
+
+const ownerEmail =
+  $("newOwnerEmail")
+    .value.trim()
+    .toLowerCase();
+
+
+const {
+  data: ownerResult,
+  error: ownerFunctionError
+} =
+  await db.functions.invoke(
+    "create-business-owner",
+    {
+      body: {
+        business_id: businessId,
+        owner_name: ownerName,
+        owner_email: ownerEmail
+      }
+    }
+  );
+
+
+if (ownerFunctionError) {
+  throw ownerFunctionError;
+}
+
+
+if (
+  !ownerResult ||
+  ownerResult.success !== true
+) {
+
+  throw new Error(
+    ownerResult?.error ||
+    "No se pudo crear el Owner"
+  );
+
+}
         // -----------------------------
         // ÉXITO
         // -----------------------------
