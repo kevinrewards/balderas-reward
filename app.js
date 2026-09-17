@@ -725,6 +725,18 @@ $("visitPeriod").onchange = () => {
   );
 
 };
+// Evita que textos ingresados por usuarios
+// puedan convertirse en código HTML
+function escapeHtml(value) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
 // ==========================================
 // BALDERAS SUPERADMIN - NEGOCIOS
 // ==========================================
