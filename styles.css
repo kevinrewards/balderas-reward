@@ -401,3 +401,110 @@ h2 {
 .businessManageButton {
   width: 100%;
 }
+/* =================================
+   NUEVO NEGOCIO - BRANDING
+   ================================= */
+
+#newBusinessForm {
+  display: grid;
+  gap: 12px;
+}
+
+#newBusinessForm label {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #aaa;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#newBusinessForm input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.brandingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.brandingGrid input[type="color"] {
+  width: 100%;
+  height: 50px;
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.businessPreview {
+  margin: 20px 0;
+  padding: 26px 18px;
+  border: 2px solid #E1B85D;
+  border-radius: 24px;
+  background: #0D0D0E;
+  text-align: center;
+  transition: .2s ease;
+}
+
+.businessPreviewLogo {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+  color: #222;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.businessPreviewLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.businessPreviewName {
+  font-size: 25px;
+  font-weight: 900;
+  color: #E1B85D;
+}
+
+.businessPreviewProgram {
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #E1B85D;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.businessPreviewProgress {
+  margin-top: 24px;
+  font-size: 28px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.businessPreviewCounter {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #E1B85D;
+}
+
+@media(max-width:520px) {
+
+  .brandingGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .businessPreviewProgress {
+    font-size: 24px;
+  }
+
+}
