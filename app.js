@@ -17,11 +17,16 @@ const esc = s =>
     "'": "&#39;"
   }[m]));
 
-function makeStars(number) {
-  const completed = Math.min(Math.max(number, 0), 10);
+/* CREA LAS ESTRELLAS */
+function makeStars(completed, total = 10) {
+
+  completed = Math.min(
+    Math.max(completed, 0),
+    total
+  );
 
   return Array.from(
-    { length: 10 },
+    { length: total },
     (_, i) => i < completed ? "★" : "☆"
   ).join("");
 }
@@ -39,65 +44,93 @@ function appView() {
 /* INICIAR SESIÓN */
 
 $("form").onsubmit = async e => {
+
   e.preventDefault();
 
   $("msg").textContent = "Ingresando…";
 
-  const { error } = await db.auth.signInWithPassword({
-    email: $("email").value.trim(),
-    password: $("password").value
-  });
+  const { error } =
+    await db.auth.signInWithPassword({
+
+      email: $("email").value.trim(),
+      password: $("password").value
+
+    });
 
   if (error) {
-    $("msg").textContent = "Error: " + error.message;
+
+    $("msg").textContent =
+      "Error: " + error.message;
+
     return;
   }
 
   $("msg").textContent = "";
+
   await load();
 };
 
 /* CERRAR SESIÓN */
 
 $("logout").onclick = async () => {
+
   await db.auth.signOut();
+
   loginView();
 };
 
 /* NUEVO CLIENTE */
 
 $("newClient").onclick = () => {
+
   $("clientDialog").showModal();
 };
 
 $("cancelClient").onclick = () => {
+
   $("clientDialog").close();
 };
 
 $("clientForm").onsubmit = async e => {
+
   e.preventDefault();
 
-  const name = $("clientName").value.trim();
+  const name =
+    $("clientName").value.trim();
 
   if (!name) return;
 
   const payload = {
+
     business_id: businessId,
+
     name: name,
-    phone: $("clientPhone").value.trim() || null,
-    email: $("clientEmail").value.trim() || null
+
+    phone:
+      $("clientPhone").value.trim() || null,
+
+    email:
+      $("clientEmail").value.trim() || null
+
   };
 
-  const { error } = await db
-    .from("customers")
-    .insert(payload);
+  const { error } =
+    await db
+      .from("customers")
+      .insert(payload);
 
   if (error) {
-    alert("No se pudo crear el cliente: " + error.message);
+
+    alert(
+      "No se pudo crear el cliente: " +
+      error.message
+    );
+
     return;
   }
 
   $("clientForm").reset();
+
   $("clientDialog").close();
 
   await load();
@@ -107,19 +140,29 @@ $("clientForm").onsubmit = async e => {
 
 async function addVisit(customerId) {
 
-  if (!confirm("¿Registrar una nueva visita para este cliente?")) {
+  if (
+    !confirm(
+      "¿Registrar una nueva visita para este cliente?"
+    )
+  ) {
     return;
   }
 
-  const { error } = await db.rpc(
-    "register_visit",
-    {
-      target_customer_id: customerId
-    }
-  );
+  const { error } =
+    await db.rpc(
+      "register_visit",
+      {
+        target_customer_id: customerId
+      }
+    );
 
   if (error) {
-    alert("No se pudo registrar la visita: " + error.message);
+
+    alert(
+      "No se pudo registrar la visita: " +
+      error.message
+    );
+
     return;
   }
 
@@ -128,32 +171,44 @@ async function addVisit(customerId) {
 
 /* CANJEAR RECOMPENSA */
 
-async function redeem(customerId, rewardId, rewardName) {
+async function redeem(
+  customerId,
+  rewardId,
+  rewardName
+) {
 
   if (
     !confirm(
-      "¿Canjear \"" +
+      '¿Canjear "' +
       rewardName +
-      "\"? El canje quedará registrado."
+      '"? El canje quedará registrado.'
     )
   ) {
     return;
   }
 
-  const { error } = await db.rpc(
-    "redeem_reward",
-    {
-      target_customer_id: customerId,
-      target_reward_id: rewardId
-    }
-  );
+  const { error } =
+    await db.rpc(
+      "redeem_reward",
+      {
+        target_customer_id: customerId,
+        target_reward_id: rewardId
+      }
+    );
 
   if (error) {
-    alert("No se pudo canjear: " + error.message);
+
+    alert(
+      "No se pudo canjear: " +
+      error.message
+    );
+
     return;
   }
 
-  alert("Recompensa canjeada correctamente.");
+  alert(
+    "Recompensa canjeada correctamente."
+  );
 
   await load();
 }
@@ -164,61 +219,73 @@ async function load() {
 
   appView();
 
-  $("status").textContent = "Sincronizando…";
+  $("status").textContent =
+    "Sincronizando…";
 
-  const membership = await db
-    .from("business_members")
-    .select("business_id")
-    .limit(1);
+  const membership =
+    await db
+      .from("business_members")
+      .select("business_id")
+      .limit(1);
 
   if (
     membership.error ||
     !membership.data ||
     !membership.data.length
   ) {
+
     $("status").textContent =
       "No encontré un negocio vinculado.";
+
     return;
   }
 
-  businessId = membership.data[0].business_id;
+  businessId =
+    membership.data[0].business_id;
 
-  const [business, customers, visits, rewardData, redemptions] =
-    await Promise.all([
+  const [
+    business,
+    customers,
+    visits,
+    rewardData,
+    redemptions
+  ] = await Promise.all([
 
-      db
-        .from("businesses")
-        .select("name")
-        .eq("id", businessId)
-        .single(),
+    db
+      .from("businesses")
+      .select("name")
+      .eq("id", businessId)
+      .single(),
 
-      db
-        .from("customers")
-        .select("id,name")
-        .eq("business_id", businessId)
-        .eq("active", true)
-        .order("created_at"),
+    db
+      .from("customers")
+      .select("id,name")
+      .eq("business_id", businessId)
+      .eq("active", true)
+      .order("created_at"),
 
-      db
-        .from("visits")
-        .select("id,customer_id")
-        .eq("business_id", businessId),
+    db
+      .from("visits")
+      .select("id,customer_id")
+      .eq("business_id", businessId),
 
-      db
-        .from("rewards")
-        .select(
-          "id,name,description,required_visits"
-        )
-        .eq("business_id", businessId)
-        .eq("active", true)
-        .order("required_visits"),
+    db
+      .from("rewards")
+      .select(
+        "id,name,description,required_visits"
+      )
+      .eq("business_id", businessId)
+      .eq("active", true)
+      .order("required_visits"),
 
-      db
-        .from("redemptions")
-        .select("customer_id,visits_spent")
-        .eq("business_id", businessId)
+    db
+      .from("redemptions")
+      .select(
+        "customer_id,visits_spent"
+      )
+      .eq("business_id", businessId)
 
-    ]);
+  ]);
 
   const error =
     business.error ||
@@ -228,36 +295,53 @@ async function load() {
     redemptions.error;
 
   if (error) {
+
     $("status").textContent =
       "Error: " + error.message;
+
     return;
   }
 
-  $("biz").textContent = business.data.name;
+  $("biz").textContent =
+    business.data.name;
 
-  const customerList = customers.data || [];
-  const visitList = visits.data || [];
+  const customerList =
+    customers.data || [];
 
-  rewards = rewardData.data || [];
+  const visitList =
+    visits.data || [];
 
-  const redemptionList = redemptions.data || [];
+  rewards =
+    rewardData.data || [];
 
-  $("cc").textContent = customerList.length;
-  $("vc").textContent = visitList.length;
-  $("rc").textContent = rewards.length;
+  const redemptionList =
+    redemptions.data || [];
+
+  $("cc").textContent =
+    customerList.length;
+
+  $("vc").textContent =
+    visitList.length;
+
+  $("rc").textContent =
+    rewards.length;
 
   const totalVisits = {};
   const spentVisits = {};
 
   visitList.forEach(v => {
+
     totalVisits[v.customer_id] =
       (totalVisits[v.customer_id] || 0) + 1;
+
   });
 
   redemptionList.forEach(r => {
+
     spentVisits[r.customer_id] =
       (spentVisits[r.customer_id] || 0) +
       r.visits_spent;
+
   });
 
   $("customers").innerHTML =
@@ -273,43 +357,76 @@ async function load() {
       const visualProgress =
         Math.min(available, 10);
 
+      /* RECOMPENSAS CON ESTRELLAS */
+
       const rewardStatus =
         rewards.map(reward => {
 
-          const missing =
-            Math.max(
-              reward.required_visits - available,
-              0
+          const required =
+            reward.required_visits;
+
+          const completed =
+            Math.min(
+              available,
+              required
             );
 
-          if (missing === 0) {
-
-            return `
-              <div class="rewardState ready">
-
-                🎁 ${esc(reward.name)}
-                — Disponible
-
-                <button
-                  onclick="redeem(
-                    '${customer.id}',
-                    '${reward.id}',
-                    '${esc(reward.name)}'
-                  )">
-                  Canjear
-                </button>
-
-              </div>
-            `;
-          }
+          const unlocked =
+            available >= required;
 
           return `
-            <div class="rewardState">
 
-              🔒 ${esc(reward.name)}
-              — faltan ${missing} visita(s)
+            <div class="rewardProgress">
+
+              <div class="rewardTitle">
+
+                🎁 ${esc(reward.name)}
+
+              </div>
+
+              <div class="rewardStars">
+
+                ${makeStars(
+                  completed,
+                  required
+                )}
+
+              </div>
+
+              <div class="rewardCounter">
+
+                ${completed}/${required}
+
+              </div>
+
+              ${
+                unlocked
+                ? `
+
+                  <div class="rewardAvailable">
+
+                    Recompensa disponible
+
+                  </div>
+
+                  <button
+                    class="redeemButton"
+                    onclick="redeem(
+                      '${customer.id}',
+                      '${reward.id}',
+                      '${esc(reward.name)}'
+                    )">
+
+                    Canjear recompensa
+
+                  </button>
+
+                `
+                : ""
+              }
 
             </div>
+
           `;
 
         }).join("");
@@ -322,27 +439,35 @@ async function load() {
 
             <div>
 
-              <b>${esc(customer.name)}</b>
+              <b>
+                ${esc(customer.name)}
+              </b>
 
               <br>
 
               <span class="muted">
-                ${available} visita(s) disponible(s)
+
+                ${available}
+                visita(s) disponible(s)
+
               </span>
 
             </div>
 
             <span class="badge">
+
               ${visualProgress}/10
+
             </span>
 
           </div>
 
-          <div
-            class="stars"
-            aria-label="${visualProgress} de 10 visitas">
+          <div class="stars">
 
-            ${makeStars(visualProgress)}
+            ${makeStars(
+              visualProgress,
+              10
+            )}
 
           </div>
 
@@ -351,7 +476,9 @@ async function load() {
           <div class="customerActions">
 
             <button
-              onclick="addVisit('${customer.id}')">
+              onclick="addVisit(
+                '${customer.id}'
+              )">
 
               + Registrar visita
 
@@ -360,13 +487,14 @@ async function load() {
           </div>
 
         </div>
+
       `;
 
     }).join("") ||
 
     `<p class="muted">
-       Aún no hay clientes.
-     </p>`;
+      Aún no hay clientes.
+    </p>`;
 
   $("rewards").innerHTML =
     rewards.map(reward => `
@@ -375,18 +503,27 @@ async function load() {
 
         <div>
 
-          <b>${esc(reward.name)}</b>
+          <b>
+            ${esc(reward.name)}
+          </b>
 
           <br>
 
           <span class="muted">
-            ${esc(reward.description || "")}
+
+            ${esc(
+              reward.description || ""
+            )}
+
           </span>
 
         </div>
 
         <span class="badge">
-          ${reward.required_visits} visitas
+
+          ${reward.required_visits}
+          visitas
+
         </span>
 
       </div>
@@ -406,9 +543,13 @@ async function load() {
   } = await db.auth.getSession();
 
   if (session) {
+
     await load();
+
   } else {
+
     loginView();
+
   }
 
 })();
