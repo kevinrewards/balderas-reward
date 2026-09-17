@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d0d0e">
+
+  <title>Registrar visita | BALDERAS Reward</title>
+
+  <link rel="stylesheet" href="checkin.css">
+</head>
+
+<body>
+
+<main>
+
+  <header>
+    BALDERAS <span>Reward</span>
+  </header>
+
+  <!-- CARGANDO -->
+
+  <section id="loading" class="card center">
+    <div class="loader">●</div>
+    <h2>Buscando cliente...</h2>
+    <p>Estamos verificando el código.</p>
+  </section>
+
+
+  <!-- INICIAR SESIÓN -->
+
+  <section id="loginSection" class="card" hidden>
+
+    <div class="icon">🔐</div>
+
+    <h1>Acceso del personal</h1>
+
+    <p class="muted">
+      Inicia sesión para confirmar la visita del cliente.
+    </p>
+
+    <form id="loginForm">
+
+      <input
+        id="email"
+        type="email"
+        placeholder="Correo"
+        required
+      >
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Contraseña"
+        required
+      >
+
+      <button type="submit">
+        Iniciar sesión
+      </button>
+
+    </form>
+
+    <p id="loginMessage" class="message"></p>
+
+  </section>
+
+
+  <!-- CLIENTE -->
+
+  <section id="customerSection" hidden>
+
+    <div class="card center">
+
+      <div class="found">
+        ✓ CLIENTE ENCONTRADO
+      </div>
+
+      <div id="businessName" class="business">
+        LG ESTUDIO
+      </div>
+
+      <h1 id="customerName">
+        Cliente
+      </h1>
+
+      <div id="stars" class="stars">
+      </div>
+
+      <div id="visitCounter" class="counter">
+        0 / 10
+      </div>
+
+      <div class="muted">
+        VISITAS DISPONIBLES
+      </div>
+
+      <button
+        id="confirmVisit"
+        class="confirmButton">
+        ✓ CONFIRMAR VISITA
+      </button>
+
+      <p class="security">
+        🔒 Solo personal autorizado del negocio
+        puede registrar esta visita.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- ÉXITO -->
+
+  <section id="successSection" class="card center" hidden>
+
+    <div class="successIcon">
+      ✓
+    </div>
+
+    <h1>Visita registrada</h1>
+
+    <p id="successName"></p>
+
+    <div id="successStars" class="stars">
+    </div>
+
+    <div id="successCounter" class="counter">
+    </div>
+
+    <p class="gold">
+      La visita fue agregada correctamente.
+    </p>
+
+    <button
+      id="finishButton"
+      class="secondary">
+      Finalizar
+    </button>
+
+  </section>
+
+
+  <!-- ERROR -->
+
+  <section id="errorSection" class="card center" hidden>
+
+    <div class="errorIcon">
+      !
+    </div>
+
+    <h1>No se pudo continuar</h1>
+
+    <p id="errorMessage" class="muted">
+      Código de cliente no válido.
+    </p>
+
+  </section>
+
+
+  <footer>
+    Uso exclusivo de personal autorizado
+    <br>
+    BALDERAS <span>Reward</span>
+  </footer>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="checkin.js"></script>
+
+</body>
+</html>
