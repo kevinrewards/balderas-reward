@@ -508,3 +508,20 @@ h2 {
   }
 
 }
+.ownerSetup {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #3a3328;
+  border-radius: 18px;
+  background: #111113;
+}
+
+.ownerSetup h3 {
+  margin-top: 0;
+  color: #E1B85D;
+}
+
+.ownerSetup .muted {
+  font-size: 11px;
+  line-height: 1.5;
+}
