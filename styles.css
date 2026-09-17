@@ -138,10 +138,11 @@ button {
   min-width: 145px;
 }
 
-.rewardState {
-  font-size: 13px;
-  color: #aaa;
-  margin-top: 8px;
+.rewardStars {
+  color: #e1b85d;
+  font-size: 25px;
+  letter-spacing: 2px;
+  line-height: 1.5;
 }
 
 .rewardState.ready {
