@@ -1140,6 +1140,276 @@ if (newBusinessLogoInput) {
   );
 
 }
+// ==========================================
+// CREAR NEGOCIO COMPLETO
+// ==========================================
+
+const newBusinessForm =
+  $("newBusinessForm");
+
+if (newBusinessForm) {
+
+  newBusinessForm.addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+      const message =
+        $("newBusinessMessage");
+
+      const button =
+        $("createBusinessButton");
+
+
+      message.textContent =
+        "Creando negocio...";
+
+      button.disabled = true;
+
+
+      try {
+
+        // -----------------------------
+        // DATOS DEL NEGOCIO
+        // -----------------------------
+
+        const name =
+          $("newBusinessName")
+            .value.trim();
+
+        const slug =
+          $("newBusinessSlug")
+            .value.trim()
+            .toLowerCase();
+
+
+        const programName =
+          $("newProgramName")
+            .value.trim()
+          || "Tarjeta de Lealtad";
+
+
+        const primaryColor =
+          $("newPrimaryColor")
+            .value;
+
+
+        const backgroundColor =
+          $("newBackgroundColor")
+            .value;
+
+
+        const progressEmoji =
+          $("newProgressEmoji")
+            .value.trim()
+          || "★";
+
+
+        const emptyEmoji =
+          $("newEmptyEmoji")
+            .value.trim()
+          || "☆";
+
+
+        const progressGoal =
+          Number(
+            $("newProgressGoal").value
+          );
+
+
+        const welcomeText =
+          $("newWelcomeText")
+            .value.trim();
+
+
+        // -----------------------------
+        // 1. CREAR NEGOCIO
+        // -----------------------------
+
+        const {
+          data: businessId,
+          error: businessError
+        } =
+          await db.rpc(
+            "admin_create_business",
+            {
+              new_name: name,
+              new_slug: slug
+            }
+          );
+
+
+        if (businessError) {
+
+          throw businessError;
+
+        }
+
+
+        // -----------------------------
+        // 2. SUBIR LOGOTIPO
+        // -----------------------------
+
+        let logoPath = null;
+
+        const logoFile =
+          $("newBusinessLogo")
+            .files?.[0];
+
+
+        if (logoFile) {
+
+          const extension =
+            logoFile.name
+              .split(".")
+              .pop()
+              .toLowerCase();
+
+
+          logoPath =
+            `${businessId}/logo.${extension}`;
+
+
+          const {
+            error: uploadError
+          } =
+            await db.storage
+              .from("business-assets")
+              .upload(
+                logoPath,
+                logoFile,
+                {
+                  upsert: true
+                }
+              );
+
+
+          if (uploadError) {
+
+            throw uploadError;
+
+          }
+
+        }
+
+
+        // -----------------------------
+        // 3. GUARDAR BRANDING
+        // -----------------------------
+
+        const {
+          error: brandingError
+        } =
+          await db
+            .from("business_branding")
+            .insert({
+
+              business_id:
+                businessId,
+
+              program_name:
+                programName,
+
+              logo_path:
+                logoPath,
+
+              primary_color:
+                primaryColor,
+
+              background_color:
+                backgroundColor,
+
+              progress_emoji:
+                progressEmoji,
+
+              empty_emoji:
+                emptyEmoji,
+
+              progress_goal:
+                progressGoal,
+
+              welcome_text:
+                welcomeText
+
+            });
+
+
+        if (brandingError) {
+
+          throw brandingError;
+
+        }
+
+
+        // -----------------------------
+        // ÉXITO
+        // -----------------------------
+
+        message.textContent =
+          "✓ Negocio creado correctamente";
+
+
+        setTimeout(
+          async () => {
+
+            closeNewBusinessModal();
+
+            newBusinessForm.reset();
+
+            $("newPrimaryColor").value =
+              "#E1B85D";
+
+            $("newBackgroundColor").value =
+              "#0D0D0E";
+
+            $("newProgressEmoji").value =
+              "★";
+
+            $("newEmptyEmoji").value =
+              "☆";
+
+            $("newProgressGoal").value =
+              "10";
+
+            $("newProgramName").value =
+              "Tarjeta de Lealtad";
+
+            $("businessPreviewLogo")
+              .innerHTML =
+              "LOGO";
+
+            updateBusinessPreview();
+
+            await openBusinessAdmin();
+
+          },
+          800
+        );
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+          "Error: " +
+          (
+            error.message
+            || "No se pudo crear el negocio"
+          );
+
+      } finally {
+
+        button.disabled =
+          false;
+
+      }
+
+    }
+  );
+
+}
 /* COMPROBAR SESIÓN */
 
 (async () => {
