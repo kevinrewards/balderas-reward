@@ -167,7 +167,31 @@ async function loadCard() {
 
       })
       .join("");
+/* QR PERSONAL DEL CLIENTE */
 
+const checkinURL =
+  new URL(
+    "checkin.html",
+    window.location.href
+  );
+
+checkinURL.searchParams.set(
+  "token",
+  token
+);
+
+$("customerQR").innerHTML = "";
+
+new QRCode(
+  $("customerQR"),
+  {
+    text: checkinURL.href,
+    width: 190,
+    height: 190,
+    correctLevel:
+      QRCode.CorrectLevel.H
+  }
+);
   $("loading").hidden = true;
   $("loyaltyCard").hidden = false;
 
