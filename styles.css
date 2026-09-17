@@ -255,3 +255,51 @@ h2 {
   font-size: 11px;
   font-weight: bold;
 }
+/* ==============================
+   PANEL SUPERADMIN
+   ============================== */
+
+#superAdminSection {
+  border: 1px solid #75613b;
+  background:
+    linear-gradient(
+      145deg,
+      #1b1915,
+      #151517
+    );
+}
+
+#superAdminSection h2 {
+  color: #e1b85d;
+  margin-bottom: 5px;
+}
+
+.adminMenu {
+  display: grid;
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.adminMenu button {
+  width: 100%;
+  min-height: 55px;
+}
+
+.adminMenu button:last-child {
+  grid-column: 1 / -1;
+}
+
+@media(max-width:520px) {
+
+  .adminMenu {
+    grid-template-columns: 1fr;
+  }
+
+  .adminMenu button:last-child {
+    grid-column: auto;
+  }
+
+}
