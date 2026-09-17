@@ -1335,24 +1335,37 @@ if (newBusinessForm) {
             });
 
 
-        if (brandingError) {
+      if (brandingError) {
+  throw brandingError;
+}
 
-          throw brandingError;
-
-        }
 
 // -----------------------------
 // 4. CREAR OWNER
 // -----------------------------
 
+message.textContent =
+  "Creando cuenta del Owner...";
+
 const ownerName =
-  $("newOwnerName")
-    .value.trim();
+  $("newOwnerName").value.trim();
 
 const ownerEmail =
   $("newOwnerEmail")
     .value.trim()
     .toLowerCase();
+
+if (!ownerName) {
+  throw new Error(
+    "Escribe el nombre del Owner"
+  );
+}
+
+if (!ownerEmail) {
+  throw new Error(
+    "Escribe el correo del Owner"
+  );
+}
 
 
 const {
@@ -1372,7 +1385,15 @@ const {
 
 
 if (ownerFunctionError) {
-  throw ownerFunctionError;
+
+  console.error(
+    "Error Edge Function:",
+    ownerFunctionError
+  );
+
+  throw new Error(
+    "No se pudo contactar al servidor para crear el Owner"
+  );
 }
 
 
@@ -1381,18 +1402,24 @@ if (
   ownerResult.success !== true
 ) {
 
+  console.error(
+    "Respuesta Owner:",
+    ownerResult
+  );
+
   throw new Error(
     ownerResult?.error ||
     "No se pudo crear el Owner"
   );
-
 }
-        // -----------------------------
-        // ÉXITO
-        // -----------------------------
 
-        message.textContent =
-          "✓ Negocio creado correctamente";
+
+// -----------------------------
+// ÉXITO
+// -----------------------------
+
+message.textContent =
+  "✓ Negocio y Owner creados correctamente";
 
 
         setTimeout(
