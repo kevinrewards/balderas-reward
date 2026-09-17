@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d0d0e">
+
+  <title>Mi tarjeta | BALDERAS Reward</title>
+
+  <link rel="stylesheet" href="card.css?v=1">
+</head>
+
+<body>
+
+<main class="cardPage">
+
+  <section id="loading" class="message">
+    Cargando tu tarjeta...
+  </section>
+
+  <section id="error" class="message error" hidden>
+    No pudimos encontrar esta tarjeta.
+  </section>
+
+  <section id="loyaltyCard" hidden>
+
+    <div class="brand">
+      <div class="logoBox">
+        <img
+          id="businessLogo"
+          src="lg-estudio.jpg"
+          alt="Logo LG ESTUDIO"
+        >
+      </div>
+
+      <div id="businessName" class="businessName">
+        LG ESTUDIO
+      </div>
+
+      <div class="loyaltyLabel">
+        TARJETA DE LEALTAD
+      </div>
+    </div>
+
+    <section class="customerCard">
+
+      <div class="welcome">
+        Hola,
+      </div>
+
+      <h1 id="customerName">Cliente</h1>
+
+      <div class="activeBadge">
+        ● TARJETA ACTIVA
+      </div>
+
+      <div
+        id="mainStars"
+        class="mainStars">
+      </div>
+
+      <div
+        id="mainCounter"
+        class="mainCounter">
+      </div>
+
+      <div class="availableText">
+        VISITAS DISPONIBLES
+      </div>
+
+    </section>
+
+    <section class="progressSection">
+
+      <div class="sectionTitle">
+        TU PROGRESO
+      </div>
+
+      <div id="rewardList"></div>
+
+    </section>
+
+    <footer>
+      <span>Powered by</span>
+      <strong>
+        BALDERAS <b>Reward</b>
+      </strong>
+    </footer>
+
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="card.js?v=1"></script>
+
+</body>
+</html>
