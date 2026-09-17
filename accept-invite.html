@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="theme-color"
+    content="#0d0d0e"
+  >
+
+  <title>
+    Activar cuenta | BALDERAS Reward
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="accept-invite.css"
+  >
+</head>
+
+
+<body>
+
+<main>
+
+  <header>
+    BALDERAS
+    <span>Reward</span>
+  </header>
+
+
+  <section
+    id="loading"
+    class="inviteCard center"
+  >
+
+    <div class="inviteIcon">
+      ⏳
+    </div>
+
+    <h1>
+      Verificando invitación...
+    </h1>
+
+    <p class="muted">
+      Estamos preparando tu cuenta.
+    </p>
+
+  </section>
+
+
+  <section
+    id="passwordSection"
+    class="inviteCard"
+    hidden
+  >
+
+    <div class="inviteIcon">
+      🔐
+    </div>
+
+    <div class="eyebrow">
+      BIENVENIDO
+    </div>
+
+    <h1>
+      Activa tu cuenta
+    </h1>
+
+    <p class="muted">
+      Crea una contraseña para acceder
+      a BALDERAS Reward.
+    </p>
+
+
+    <form id="passwordForm">
+
+      <label>
+        Nueva contraseña
+      </label>
+
+      <input
+        id="newPassword"
+        type="password"
+        minlength="8"
+        placeholder="Mínimo 8 caracteres"
+        required
+      >
+
+
+      <label>
+        Confirmar contraseña
+      </label>
+
+      <input
+        id="confirmPassword"
+        type="password"
+        minlength="8"
+        placeholder="Repite tu contraseña"
+        required
+      >
+
+
+      <button type="submit">
+        ACTIVAR MI CUENTA
+      </button>
+
+    </form>
+
+
+    <p
+      id="message"
+      class="message">
+    </p>
+
+  </section>
+
+
+  <section
+    id="successSection"
+    class="inviteCard center"
+    hidden
+  >
+
+    <div class="successIcon">
+      ✓
+    </div>
+
+    <h1>
+      Cuenta activada
+    </h1>
+
+    <p class="muted">
+      Tu contraseña fue creada correctamente.
+    </p>
+
+    <button id="goToLogin">
+      ENTRAR A BALDERAS REWARD
+    </button>
+
+  </section>
+
+
+  <section
+    id="errorSection"
+    class="inviteCard center"
+    hidden
+  >
+
+    <div class="errorIcon">
+      !
+    </div>
+
+    <h1>
+      Invitación no válida
+    </h1>
+
+    <p
+      id="errorMessage"
+      class="muted">
+      Este enlace ha vencido o ya fue utilizado.
+    </p>
+
+  </section>
+
+
+  <footer>
+    BALDERAS
+    <span>Reward</span>
+  </footer>
+
+</main>
+
+
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+</script>
+
+<script src="accept-invite.js?v=1"></script>
+
+</body>
+
+</html>
