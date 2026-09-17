@@ -265,9 +265,9 @@ async function load() {
       .order("created_at"),
 
     db
-      .from("visits")
-      .select("id,customer_id")
-      .eq("business_id", businessId),
+  .from("visits")
+  .select("id,customer_id,created_at")
+  .eq("business_id", businessId),
 
     db
       .from("rewards")
@@ -532,7 +532,92 @@ async function load() {
   $("status").textContent =
     "Datos sincronizados con Supabase.";
 }
+/* CONTADOR DE VISITAS POR PERIODO */
 
+let currentVisitList = [];
+
+function updateVisitCounter(visits) {
+
+  currentVisitList = visits;
+
+  const period =
+    $("visitPeriod").value;
+
+  const now = new Date();
+
+  let filtered = visits;
+
+  if (period === "today") {
+
+    filtered = visits.filter(visit => {
+
+      const date =
+        new Date(visit.created_at);
+
+      return (
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth() &&
+        date.getDate() === now.getDate()
+      );
+
+    });
+
+  }
+
+  if (period === "week") {
+
+    const start =
+      new Date(now);
+
+    const day =
+      start.getDay();
+
+    const difference =
+      day === 0 ? -6 : 1 - day;
+
+    start.setDate(
+      start.getDate() + difference
+    );
+
+    start.setHours(0, 0, 0, 0);
+
+    filtered = visits.filter(visit => {
+
+      return (
+        new Date(visit.created_at) >= start
+      );
+
+    });
+
+  }
+
+  if (period === "month") {
+
+    filtered = visits.filter(visit => {
+
+      const date =
+        new Date(visit.created_at);
+
+      return (
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth()
+      );
+
+    });
+
+  }
+
+  $("vc").textContent =
+    filtered.length;
+}
+
+$("visitPeriod").onchange = () => {
+
+  updateVisitCounter(
+    currentVisitList
+  );
+
+};
 /* COMPROBAR SESIÓN */
 
 (async () => {
