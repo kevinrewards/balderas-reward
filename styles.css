@@ -193,3 +193,43 @@ h2 {
     margin-top: 8px;
   }
 }
+
+/* RECOMPENSAS VISUALES */
+
+.rewardProgress {
+  margin: 18px 0;
+  padding: 16px;
+  background: #111113;
+  border: 1px solid #303034;
+  border-radius: 16px;
+}
+
+.rewardTitle {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.rewardStars {
+  color: #e1b85d;
+  font-size: 25px;
+  letter-spacing: 2px;
+  line-height: 1.5;
+}
+
+.rewardCounter {
+  color: #aaa;
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.rewardAvailable {
+  color: #e1b85d;
+  font-weight: 800;
+  margin-top: 10px;
+}
+
+.redeemButton {
+  width: 100%;
+  margin-top: 10px;
+}
