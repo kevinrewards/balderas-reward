@@ -303,3 +303,101 @@ h2 {
   }
 
 }
+/* =================================
+   SUPERADMIN - NEGOCIOS
+   ================================= */
+
+.adminModal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,.88);
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.adminModal[hidden] {
+  display: none;
+}
+
+.adminModalBox {
+  width: 100%;
+  max-width: 650px;
+  margin: 30px auto;
+  padding: 22px;
+  border-radius: 24px;
+  border: 1px solid #51452f;
+  background: #151517;
+}
+
+.adminModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.adminModalHeader h2 {
+  margin: 4px 0;
+  color: #e1b85d;
+}
+
+.closeAdminButton {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.businessAdminItem {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #393329;
+  border-radius: 18px;
+  background: #101011;
+}
+
+.businessAdminTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.businessAdminTop strong {
+  color: #e1b85d;
+}
+
+.businessStatus {
+  font-size: 10px;
+  font-weight: 800;
+  color: #d9b45f;
+}
+
+.businessAdminInfo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.businessAdminInfo div {
+  padding: 12px;
+  border-radius: 12px;
+  background: #19191b;
+}
+
+.businessAdminInfo span {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 9px;
+  color: #777;
+}
+
+.businessAdminInfo strong {
+  font-size: 13px;
+}
+
+.businessManageButton {
+  width: 100%;
+}
