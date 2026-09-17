@@ -310,6 +310,15 @@ console.log(
   "BALDERAS Superadmin:",
   isSuperAdmin
 );
+  const superAdminSection =
+  $("superAdminSection");
+
+if (superAdminSection) {
+
+  superAdminSection.hidden =
+    !isSuperAdmin;
+
+}
   $("status").textContent =
     "Sincronizando…";
 
