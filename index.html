@@ -163,6 +163,229 @@
   </div>
 
 </div>
+  <!-- ASISTENTE: NUEVO NEGOCIO -->
+<div id="newBusinessModal" class="adminModal" hidden>
+
+  <div class="adminModalBox">
+
+    <div class="adminModalHeader">
+
+      <div>
+        <div class="eyebrow">
+          BALDERAS ADMIN
+        </div>
+
+        <h2>
+          + Nuevo negocio
+        </h2>
+      </div>
+
+      <button
+        id="closeNewBusiness"
+        class="closeAdminButton"
+        type="button">
+        ✕
+      </button>
+
+    </div>
+
+
+    <form id="newBusinessForm">
+
+      <label>
+        Nombre del negocio
+      </label>
+
+      <input
+        id="newBusinessName"
+        type="text"
+        placeholder="Ej. FOTOGRAFÍA KEEL"
+        required
+      >
+
+
+      <label>
+        Identificador
+      </label>
+
+      <input
+        id="newBusinessSlug"
+        type="text"
+        placeholder="fotografia-keel"
+        required
+      >
+
+
+      <label>
+        Logotipo
+      </label>
+
+      <input
+        id="newBusinessLogo"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+      >
+
+
+      <label>
+        Nombre del programa
+      </label>
+
+      <input
+        id="newProgramName"
+        type="text"
+        value="Tarjeta de Lealtad"
+      >
+
+
+      <div class="brandingGrid">
+
+        <div>
+
+          <label>
+            Color principal
+          </label>
+
+          <input
+            id="newPrimaryColor"
+            type="color"
+            value="#E1B85D"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label>
+            Color de fondo
+          </label>
+
+          <input
+            id="newBackgroundColor"
+            type="color"
+            value="#0D0D0E"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="brandingGrid">
+
+        <div>
+
+          <label>
+            Emoji de progreso
+          </label>
+
+          <input
+            id="newProgressEmoji"
+            type="text"
+            value="★"
+            maxlength="8"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label>
+            Emoji pendiente
+          </label>
+
+          <input
+            id="newEmptyEmoji"
+            type="text"
+            value="☆"
+            maxlength="8"
+          >
+
+        </div>
+
+      </div>
+
+
+      <label>
+        Meta de visitas
+      </label>
+
+      <input
+        id="newProgressGoal"
+        type="number"
+        min="1"
+        max="100"
+        value="10"
+      >
+
+
+      <label>
+        Texto de bienvenida
+      </label>
+
+      <input
+        id="newWelcomeText"
+        type="text"
+        value="Gracias por tu preferencia"
+      >
+
+
+      <div
+        id="businessPreview"
+        class="businessPreview">
+
+        <div
+          id="businessPreviewLogo"
+          class="businessPreviewLogo">
+          LOGO
+        </div>
+
+        <div
+          id="businessPreviewName"
+          class="businessPreviewName">
+          NUEVO NEGOCIO
+        </div>
+
+        <div
+          id="businessPreviewProgram"
+          class="businessPreviewProgram">
+          Tarjeta de Lealtad
+        </div>
+
+        <div
+          id="businessPreviewProgress"
+          class="businessPreviewProgress">
+          ★★★★★☆☆☆☆☆
+        </div>
+
+        <div
+          id="businessPreviewCounter"
+          class="businessPreviewCounter">
+          5 / 10 visitas
+        </div>
+
+      </div>
+
+
+      <button
+        id="createBusinessButton"
+        type="submit">
+        CREAR NEGOCIO
+      </button>
+
+
+      <p
+        id="newBusinessMessage"
+        class="message">
+      </p>
+
+    </form>
+
+  </div>
+
+</div>
 </main>
 
 <dialog id="clientDialog">
