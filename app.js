@@ -300,7 +300,16 @@ async function shareCard(token, customerName) {
 async function load() {
 
   appView();
+const { data: adminCheck, error: adminCheckError } =
+  await db.rpc("is_platform_admin");
 
+const isSuperAdmin =
+  !adminCheckError && adminCheck === true;
+
+console.log(
+  "BALDERAS Superadmin:",
+  isSuperAdmin
+);
   $("status").textContent =
     "Sincronizando…";
 
