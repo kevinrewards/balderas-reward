@@ -320,8 +320,7 @@ async function load() {
   $("cc").textContent =
     customerList.length;
 
-  $("vc").textContent =
-    visitList.length;
+  updateVisitCounter(visitList);
 
   $("rc").textContent =
     rewards.length;
