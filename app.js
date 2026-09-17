@@ -858,6 +858,288 @@ if (closeBusinessAdminButton) {
   };
 
 }
+// ==========================================
+// BALDERAS SUPERADMIN - NUEVO NEGOCIO
+// VISTA PREVIA EN VIVO
+// ==========================================
+
+function updateBusinessPreview() {
+
+  const name =
+    $("newBusinessName")?.value.trim()
+    || "NUEVO NEGOCIO";
+
+  const program =
+    $("newProgramName")?.value.trim()
+    || "Tarjeta de Lealtad";
+
+  const progressEmoji =
+    $("newProgressEmoji")?.value
+    || "★";
+
+  const emptyEmoji =
+    $("newEmptyEmoji")?.value
+    || "☆";
+
+  const goal =
+    Math.max(
+      1,
+      Math.min(
+        100,
+        Number(
+          $("newProgressGoal")?.value
+        ) || 10
+      )
+    );
+
+  const primaryColor =
+    $("newPrimaryColor")?.value
+    || "#E1B85D";
+
+  const backgroundColor =
+    $("newBackgroundColor")?.value
+    || "#0D0D0E";
+
+
+  const completed =
+    Math.min(
+      Math.ceil(goal / 2),
+      goal
+    );
+
+
+  $("businessPreviewName").textContent =
+    name;
+
+  $("businessPreviewProgram").textContent =
+    program;
+
+
+  const progress =
+    Array.from(
+      { length: goal },
+      (_, index) =>
+        index < completed
+          ? progressEmoji
+          : emptyEmoji
+    ).join("");
+
+
+  $("businessPreviewProgress").textContent =
+    progress;
+
+
+  $("businessPreviewCounter").textContent =
+    `${completed} / ${goal} visitas`;
+
+
+  $("businessPreview").style.background =
+    backgroundColor;
+
+
+  $("businessPreview").style.borderColor =
+    primaryColor;
+
+
+  $("businessPreviewName").style.color =
+    primaryColor;
+
+
+  $("businessPreviewProgram").style.color =
+    primaryColor;
+
+
+  $("businessPreviewCounter").style.color =
+    primaryColor;
+
+}
+
+
+// ------------------------------------------
+// LOGOTIPO - VISTA PREVIA
+// ------------------------------------------
+
+function previewBusinessLogo(file) {
+
+  const preview =
+    $("businessPreviewLogo");
+
+  if (!preview) return;
+
+
+  if (!file) {
+
+    preview.innerHTML = "LOGO";
+
+    return;
+  }
+
+
+  if (!file.type.startsWith("image/")) {
+
+    alert(
+      "Selecciona una imagen válida."
+    );
+
+    return;
+  }
+
+
+  const reader =
+    new FileReader();
+
+
+  reader.onload = event => {
+
+    preview.innerHTML = "";
+
+    const image =
+      document.createElement("img");
+
+    image.src =
+      event.target.result;
+
+    image.alt =
+      "Vista previa del logotipo";
+
+    preview.appendChild(image);
+
+  };
+
+
+  reader.readAsDataURL(file);
+
+}
+
+
+// ------------------------------------------
+// ABRIR ASISTENTE
+// ------------------------------------------
+
+function openNewBusinessModal() {
+
+  const modal =
+    $("newBusinessModal");
+
+  if (!modal) return;
+
+
+  modal.hidden = false;
+
+  updateBusinessPreview();
+
+}
+
+
+// ------------------------------------------
+// CERRAR ASISTENTE
+// ------------------------------------------
+
+function closeNewBusinessModal() {
+
+  const modal =
+    $("newBusinessModal");
+
+  if (!modal) return;
+
+
+  modal.hidden = true;
+
+}
+
+
+// ------------------------------------------
+// BOTONES
+// ------------------------------------------
+
+const createBusinessMainButton =
+  $("createBusiness");
+
+if (createBusinessMainButton) {
+
+  createBusinessMainButton.onclick =
+    openNewBusinessModal;
+
+}
+
+
+const createBusinessListButton =
+  $("newBusinessFromList");
+
+if (createBusinessListButton) {
+
+  createBusinessListButton.onclick = () => {
+
+    $("businessAdminModal").hidden = true;
+
+    openNewBusinessModal();
+
+  };
+
+}
+
+
+const closeNewBusinessButton =
+  $("closeNewBusiness");
+
+if (closeNewBusinessButton) {
+
+  closeNewBusinessButton.onclick =
+    closeNewBusinessModal;
+
+}
+
+
+// ------------------------------------------
+// CAMPOS QUE ACTUALIZAN LA VISTA PREVIA
+// ------------------------------------------
+
+[
+  "newBusinessName",
+  "newProgramName",
+  "newProgressEmoji",
+  "newEmptyEmoji",
+  "newProgressGoal",
+  "newPrimaryColor",
+  "newBackgroundColor"
+].forEach(id => {
+
+  const input = $(id);
+
+  if (input) {
+
+    input.addEventListener(
+      "input",
+      updateBusinessPreview
+    );
+
+  }
+
+});
+
+
+// ------------------------------------------
+// CAMBIO DE LOGOTIPO
+// ------------------------------------------
+
+const newBusinessLogoInput =
+  $("newBusinessLogo");
+
+if (newBusinessLogoInput) {
+
+  newBusinessLogoInput.addEventListener(
+    "change",
+    event => {
+
+      const file =
+        event.target.files?.[0];
+
+      previewBusinessLogo(file);
+
+    }
+  );
+
+}
 /* COMPROBAR SESIÓN */
 
 (async () => {
