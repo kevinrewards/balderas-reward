@@ -212,7 +212,89 @@ async function redeem(
 
   await load();
 }
+function getCardURL(token) {
+  return (
+    window.location.origin +
+    window.location.pathname
+      .replace(/index\.html$/, "")
+      .replace(/\/$/, "") +
+    "/card.html?token=" +
+    encodeURIComponent(token)
+  );
+}
 
+function openCard(token) {
+
+  if (!token) {
+    alert("Este cliente todavía no tiene tarjeta.");
+    return;
+  }
+
+  window.open(
+    getCardURL(token),
+    "_blank"
+  );
+}
+
+async function shareCard(token, customerName) {
+
+  if (!token) {
+    alert("Este cliente todavía no tiene tarjeta.");
+    return;
+  }
+
+  const url = getCardURL(token);
+
+  const text =
+    "Hola " + customerName +
+    " 👋\n\n" +
+    "Esta es tu tarjeta digital de lealtad de " +
+    $("biz").textContent +
+    ".\n\n" +
+    "Aquí puedes consultar tus visitas y recompensas.";
+
+  if (navigator.share) {
+
+    try {
+
+      await navigator.share({
+        title: "Tu tarjeta de lealtad",
+        text: text,
+        url: url
+      });
+
+      return;
+
+    } catch (error) {
+
+      if (error.name === "AbortError") {
+        return;
+      }
+
+    }
+
+  }
+
+  try {
+
+    await navigator.clipboard.writeText(
+      text + "\n\n" + url
+    );
+
+    alert(
+      "Enlace de la tarjeta copiado."
+    );
+
+  } catch {
+
+    prompt(
+      "Copia el enlace de la tarjeta:",
+      url
+    );
+
+  }
+
+}
 /* CARGAR DATOS */
 
 async function load() {
@@ -259,8 +341,8 @@ async function load() {
 
     db
       .from("customers")
-      .select("id,name")
-      .eq("business_id", businessId)
+      .select("id,name,qr_token")
+      .eq("business_id",businessId)
       .eq("active", true)
       .order("created_at"),
 
@@ -474,16 +556,23 @@ async function load() {
 
           <div class="customerActions">
 
-            <button
-              onclick="addVisit(
-                '${customer.id}'
-              )">
+  <button onclick="addVisit('${customer.id}')">
+    + Registrar visita
+  </button>
 
-              + Registrar visita
+  <button
+    class="secondary"
+    onclick="openCard('${customer.qr_token}')">
+    📱 Ver tarjeta
+  </button>
 
-            </button>
+  <button
+    class="secondary"
+    onclick="shareCard('${customer.qr_token}','${esc(customer.name)}')">
+    🔗 Compartir tarjeta
+  </button>
 
-          </div>
+</div>
 
         </div>
 
