@@ -721,7 +721,7 @@ currentBusinessRole =
       </div>
 
     `).join("");
-
+await loadBusinessStaff();
   $("status").textContent =
     "Datos sincronizados con Supabase.";
 }
@@ -1940,6 +1940,325 @@ $("resendOwnerAccess").onclick =
     button.disabled = false;
 
   };
+// ==========================================
+// PERSONAL DEL NEGOCIO
+// ==========================================
+
+async function loadBusinessStaff() {
+
+  const section =
+    $("staffSection");
+
+  const list =
+    $("staffList");
+
+  const addButton =
+    $("openAddStaff");
+
+
+  if (
+    !section ||
+    !list ||
+    !businessId
+  ) {
+    return;
+  }
+
+
+  const canManageStaff =
+    currentIsSuperAdmin ||
+    currentBusinessRole === "owner";
+
+
+  section.hidden =
+    !canManageStaff;
+
+
+  if (!canManageStaff) {
+    return;
+  }
+
+
+  list.innerHTML =
+    "<p>Cargando personal...</p>";
+
+
+  const {
+    data,
+    error
+  } =
+    await db.rpc(
+      "list_business_members",
+      {
+        target_business_id:
+          businessId
+      }
+    );
+
+
+  if (error) {
+
+    console.error(
+      "Error list_business_members:",
+      error
+    );
+
+    list.innerHTML = `
+      <p class="error">
+        No se pudo cargar el personal.
+      </p>
+
+      <p class="muted">
+        ${escapeHtml(
+          error.message
+        )}
+      </p>
+    `;
+
+    return;
+  }
+
+
+  if (!data || data.length === 0) {
+
+    list.innerHTML = `
+      <p class="muted">
+        No hay personal registrado.
+      </p>
+    `;
+
+    return;
+  }
+
+
+  list.innerHTML =
+    data.map(member => {
+
+      const isStaff =
+        member.role === "staff";
+
+
+      const canManageThisMember =
+        currentIsSuperAdmin ||
+        (
+          currentBusinessRole === "owner" &&
+          isStaff
+        );
+
+
+      let actions = "";
+
+
+      if (canManageThisMember) {
+
+        if (member.active) {
+
+          actions += `
+            <button
+              type="button"
+              class="secondary memberActionButton"
+              data-action="deactivate"
+              data-user-id="${member.user_id}">
+              Desactivar
+            </button>
+          `;
+
+        } else {
+
+          actions += `
+            <button
+              type="button"
+              class="secondary memberActionButton"
+              data-action="reactivate"
+              data-user-id="${member.user_id}">
+              Reactivar
+            </button>
+          `;
+
+        }
+
+
+        actions += `
+          <button
+            type="button"
+            class="dangerButton memberActionButton"
+            data-action="remove"
+            data-user-id="${member.user_id}">
+            Quitar del negocio
+          </button>
+        `;
+      }
+
+
+      return `
+
+        <div class="staffItem">
+
+          <div class="staffTop">
+
+            <div>
+
+              <strong>
+                ${escapeHtml(
+                  member.full_name
+                )}
+              </strong>
+
+              <div class="muted">
+                ${escapeHtml(
+                  member.email
+                )}
+              </div>
+
+            </div>
+
+            <span class="badge">
+              ${member.role.toUpperCase()}
+            </span>
+
+          </div>
+
+
+          <div class="
+            staffStatus
+            ${
+              member.active
+                ? "staffActive"
+                : "staffInactive"
+            }
+          ">
+
+            ${
+              member.active
+                ? "● ACTIVO"
+                : "○ INACTIVO"
+            }
+
+          </div>
+
+
+          ${
+            actions
+              ? `
+                <div class="staffActions">
+                  ${actions}
+                </div>
+              `
+              : ""
+          }
+
+        </div>
+
+      `;
+
+    }).join("");
+
+
+  if (addButton) {
+
+    addButton.hidden =
+      !canManageStaff;
+
+  }
+
+}
+
+
+// ==========================================
+// ACTIVAR / DESACTIVAR / QUITAR PERSONAL
+// ==========================================
+
+document.addEventListener(
+  "click",
+  async event => {
+
+    const button =
+      event.target.closest(
+        ".memberActionButton"
+      );
+
+    if (!button) return;
+
+
+    const action =
+      button.dataset.action;
+
+    const userId =
+      button.dataset.userId;
+
+
+    let question =
+      "¿Confirmar esta operación?";
+
+
+    if (action === "deactivate") {
+      question =
+        "¿Desactivar el acceso de este usuario?";
+    }
+
+
+    if (action === "reactivate") {
+      question =
+        "¿Reactivar el acceso de este usuario?";
+    }
+
+
+    if (action === "remove") {
+      question =
+        "¿Quitar a este usuario del negocio?\n\nSu historial no será eliminado.";
+    }
+
+
+    if (!confirm(question)) {
+      return;
+    }
+
+
+    button.disabled = true;
+
+
+    const {
+      data,
+      error
+    } =
+      await db.rpc(
+        "manage_business_member",
+        {
+          target_business_id:
+            businessId,
+
+          target_user_id:
+            userId,
+
+          requested_action:
+            action
+        }
+      );
+
+
+    if (error) {
+
+      alert(
+        "No se pudo realizar la operación:\n" +
+        error.message
+      );
+
+      button.disabled = false;
+
+      return;
+    }
+
+
+    alert(
+      data ||
+      "Operación completada."
+    );
+
+
+    await loadBusinessStaff();
+
+  }
+);
 /* COMPROBAR SESIÓN */
 
 (async () => {
