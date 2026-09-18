@@ -1513,19 +1513,29 @@ async function openOwnersAdmin() {
     );
 
 
-  if (error) {
+ if (error) {
 
-    console.error(error);
+  console.error(
+    "Error admin_list_owners:",
+    error
+  );
 
-    list.innerHTML = `
-      <p class="error">
-        No se pudieron cargar los Owners.
-      </p>
-    `;
+  list.innerHTML = `
+    <p class="error">
+      No se pudieron cargar los Owners.
+    </p>
 
-    return;
+    <p class="muted">
+      ${escapeHtml(
+        error.message ||
+        "Error desconocido"
+      )}
+    </p>
+  `;
 
-  }
+  return;
+
+}
 
 
   if (!data || data.length === 0) {
