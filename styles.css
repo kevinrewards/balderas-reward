@@ -561,3 +561,16 @@ h2 {
 .ownerManageButton {
   width: 100%;
 }
+#businessSelector {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid #4a402e;
+  border-radius: 12px;
+  background: #151517;
+  color: #e1b85d;
+  font-weight: 800;
+}
+
+#businessSelector[hidden] {
+  display: none;
+}
