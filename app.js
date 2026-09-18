@@ -8,6 +8,9 @@ const $ = id => document.getElementById(id);
 let businessId = null;
 let rewards = [];
 
+let currentBusinessRole = null;
+let currentIsSuperAdmin = false;
+
 const esc = s =>
   String(s ?? "").replace(/[&<>"']/g, m => ({
     "&": "&amp;",
@@ -305,6 +308,8 @@ const { data: adminCheck, error: adminCheckError } =
 
 const isSuperAdmin =
   !adminCheckError && adminCheck === true;
+  currentIsSuperAdmin =
+  isSuperAdmin;
 
 console.log(
   "BALDERAS Superadmin:",
