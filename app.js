@@ -2265,6 +2265,19 @@ document.addEventListener(
 
 $("openAddStaff").onclick = () => {
 
+  const canCreateStaff =
+    currentIsSuperAdmin ||
+    currentBusinessRole === "owner";
+
+  if (!canCreateStaff) {
+
+    alert(
+      "No tienes permiso para agregar personal."
+    );
+
+    return;
+  }
+
   $("addStaffMessage").textContent = "";
 
   $("addStaffModal").hidden = false;
@@ -2283,7 +2296,18 @@ $("addStaffForm").onsubmit =
   async event => {
 
     event.preventDefault();
+const canCreateStaff =
+  currentIsSuperAdmin ||
+  currentBusinessRole === "owner";
 
+if (!canCreateStaff) {
+
+  alert(
+    "No tienes permiso para agregar personal."
+  );
+
+  return;
+}
 
     const message =
       $("addStaffMessage");
