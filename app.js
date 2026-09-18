@@ -1482,6 +1482,180 @@ message.textContent =
   );
 
 }
+// ==========================================
+// BALDERAS SUPERADMIN - OWNERS
+// ==========================================
+
+async function openOwnersAdmin() {
+
+  const modal =
+    $("ownersAdminModal");
+
+  const list =
+    $("ownersAdminList");
+
+
+  if (!modal || !list) return;
+
+
+  modal.hidden = false;
+
+  list.innerHTML =
+    "<p>Cargando Owners...</p>";
+
+
+  const {
+    data,
+    error
+  } =
+    await db.rpc(
+      "admin_list_owners"
+    );
+
+
+  if (error) {
+
+    console.error(error);
+
+    list.innerHTML = `
+      <p class="error">
+        No se pudieron cargar los Owners.
+      </p>
+    `;
+
+    return;
+
+  }
+
+
+  if (!data || data.length === 0) {
+
+    list.innerHTML = `
+      <div class="businessAdminEmpty">
+        No hay Owners registrados.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    data.map(owner => `
+
+      <div class="businessAdminItem">
+
+        <div class="businessAdminTop">
+
+          <div>
+
+            <strong>
+              ${escapeHtml(
+                owner.business_name
+              )}
+            </strong>
+
+            <div class="muted">
+              Negocio
+            </div>
+
+          </div>
+
+
+          <span class="businessStatus">
+
+            ${
+              owner.membership_active
+                ? "● ACTIVO"
+                : "○ INACTIVO"
+            }
+
+          </span>
+
+        </div>
+
+
+        <div class="ownerAdminPerson">
+
+          <div class="ownerAvatar">
+            👤
+          </div>
+
+          <div>
+
+            <strong>
+              ${escapeHtml(
+                owner.owner_name
+              )}
+            </strong>
+
+            <div class="muted">
+              ${
+                owner.owner_email
+                  ? escapeHtml(
+                      owner.owner_email
+                    )
+                  : "Sin correo"
+              }
+            </div>
+
+            <div class="ownerRole">
+              OWNER
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="secondary ownerManageButton"
+          data-business-id="${owner.business_id}"
+          data-user-id="${owner.user_id}">
+          Administrar
+        </button>
+
+      </div>
+
+    `).join("");
+
+}
+
+
+// ------------------------------------------
+// BOTÓN OWNERS
+// ------------------------------------------
+
+const manageOwnersButton =
+  $("manageOwners");
+
+if (manageOwnersButton) {
+
+  manageOwnersButton.onclick =
+    openOwnersAdmin;
+
+}
+
+
+// ------------------------------------------
+// CERRAR OWNERS
+// ------------------------------------------
+
+const closeOwnersAdminButton =
+  $("closeOwnersAdmin");
+
+if (closeOwnersAdminButton) {
+
+  closeOwnersAdminButton.onclick = () => {
+
+    $("ownersAdminModal").hidden =
+      true;
+
+  };
+
+}
 /* COMPROBAR SESIÓN */
 
 (async () => {
