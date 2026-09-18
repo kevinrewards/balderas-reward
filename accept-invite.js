@@ -3,8 +3,10 @@ const db = supabase.createClient(
   "sb_publishable_BuJU2ZgKkAcF39JpL_SaaA_oTmHfW9Z"
 );
 
-const $ =
-  id => document.getElementById(id);
+const $ = id =>
+  document.getElementById(id);
+
+let recoveryReady = false;
 
 
 function hideAll() {
@@ -17,7 +19,21 @@ function hideAll() {
 }
 
 
+function showPasswordForm() {
+
+  recoveryReady = true;
+
+  hideAll();
+
+  $("passwordSection").hidden =
+    false;
+
+}
+
+
 function showError(message) {
+
+  recoveryReady = false;
 
   hideAll();
 
@@ -30,10 +46,61 @@ function showError(message) {
 }
 
 
+// ==========================================
+// ESCUCHAR INVITACIÓN / RECUPERACIÓN
+// ==========================================
+
+db.auth.onAuthStateChange(
+  async (event, session) => {
+
+    console.log(
+      "BALDERAS Auth event:",
+      event
+    );
+
+
+    if (
+      event === "PASSWORD_RECOVERY"
+    ) {
+
+      showPasswordForm();
+
+      return;
+
+    }
+
+
+    if (
+      event === "SIGNED_IN" &&
+      session
+    ) {
+
+      showPasswordForm();
+
+      return;
+
+    }
+
+  }
+);
+
+
+// ==========================================
+// INICIAR
+// ==========================================
+
 async function start() {
 
-  // Supabase procesa automáticamente
-  // la sesión recibida desde el enlace.
+  $("loading").hidden = false;
+
+
+  // Dar tiempo a Supabase para procesar
+  // el token/code de la URL.
+  await new Promise(
+    resolve =>
+      setTimeout(resolve, 1000)
+  );
+
 
   const {
     data: { session },
@@ -45,7 +112,7 @@ async function start() {
   if (error) {
 
     showError(
-      "No se pudo verificar la invitación."
+      "No se pudo verificar el enlace."
     );
 
     return;
@@ -53,44 +120,37 @@ async function start() {
   }
 
 
-  if (!session) {
+  if (session) {
 
-    // En algunos navegadores Supabase
-    // necesita unos instantes para procesar
-    // el enlace.
+    showPasswordForm();
 
-    await new Promise(
-      resolve =>
-        setTimeout(resolve, 1200)
-    );
-
-
-    const {
-      data: { session: retrySession }
-    } =
-      await db.auth.getSession();
-
-
-    if (!retrySession) {
-
-      showError(
-        "La invitación no es válida, venció o ya fue utilizada."
-      );
-
-      return;
-
-    }
+    return;
 
   }
 
 
-  hideAll();
+  // Esperamos un poco más por si el
+  // evento PASSWORD_RECOVERY está entrando.
+  await new Promise(
+    resolve =>
+      setTimeout(resolve, 1500)
+  );
 
-  $("passwordSection").hidden =
-    false;
+
+  if (!recoveryReady) {
+
+    showError(
+      "Este enlace venció, ya fue utilizado o no es válido."
+    );
+
+  }
 
 }
 
+
+// ==========================================
+// GUARDAR NUEVA CONTRASEÑA
+// ==========================================
 
 $("passwordForm").onsubmit =
   async event => {
@@ -126,22 +186,39 @@ $("passwordForm").onsubmit =
 
 
     $("message").textContent =
-      "Activando cuenta...";
+      "Guardando nueva contraseña...";
 
 
     const {
+      data,
       error
     } =
       await db.auth.updateUser({
-        password
+        password:
+          password
       });
 
 
     if (error) {
 
+      console.error(
+        "Error updateUser:",
+        error
+      );
+
       $("message").textContent =
-        "No se pudo crear la contraseña: " +
+        "No se pudo guardar la contraseña: " +
         error.message;
+
+      return;
+
+    }
+
+
+    if (!data?.user) {
+
+      $("message").textContent =
+        "No se pudo confirmar el cambio de contraseña.";
 
       return;
 
@@ -153,8 +230,12 @@ $("passwordForm").onsubmit =
     $("successSection").hidden =
       false;
 
-  };
+};
 
+
+// ==========================================
+// IR AL LOGIN
+// ==========================================
 
 $("goToLogin").onclick =
   async () => {
