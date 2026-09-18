@@ -1396,8 +1396,9 @@ if (ownerFunctionError) {
   );
 
   throw new Error(
-    "No se pudo contactar al servidor para crear el Owner"
-  );
+  ownerFunctionError.message ||
+  "No se pudo contactar al servidor para crear el Owner"
+);
 }
 
 
