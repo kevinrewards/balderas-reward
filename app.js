@@ -323,25 +323,99 @@ if (superAdminSection) {
     "Sincronizando…";
 
   const membership =
-    await db
-      .from("business_members")
-      .select("business_id")
-      .limit(1);
+  await db
+    .from("business_members")
+    .select(`
+      business_id,
+      role,
+      businesses (
+        name
+      )
+    `);
 
-  if (
-    membership.error ||
-    !membership.data ||
-    !membership.data.length
-  ) {
+if (
+  membership.error ||
+  !membership.data ||
+  !membership.data.length
+) {
 
-    $("status").textContent =
-      "No encontré un negocio vinculado.";
+  $("status").textContent =
+    "No encontré un negocio vinculado.";
 
-    return;
+  return;
+}
+
+
+const memberships =
+  membership.data;
+
+
+// ------------------------------------
+// SELECTOR DE NEGOCIOS
+// ------------------------------------
+
+const businessSelector =
+  $("businessSelector");
+
+
+if (businessSelector) {
+
+  businessSelector.innerHTML =
+    memberships.map(item => `
+
+      <option
+        value="${item.business_id}">
+        ${escapeHtml(
+          item.businesses?.name ||
+          "Negocio"
+        )}
+      </option>
+
+    `).join("");
+
+
+  // Si ya había negocio seleccionado,
+  // conservarlo.
+  const existingBusiness =
+    memberships.find(
+      item =>
+        item.business_id === businessId
+    );
+
+
+  if (existingBusiness) {
+
+    businessSelector.value =
+      businessId;
+
+  } else {
+
+    businessId =
+      memberships[0].business_id;
+
+    businessSelector.value =
+      businessId;
+
   }
 
-  businessId =
-    membership.data[0].business_id;
+
+  // Mostrar selector solamente
+  // cuando haya más de un negocio.
+  businessSelector.hidden =
+    memberships.length <= 1;
+
+
+  businessSelector.onchange =
+    async event => {
+
+      businessId =
+        event.target.value;
+
+      await load();
+
+    };
+
+}
 
   const [
     business,
