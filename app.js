@@ -2259,6 +2259,118 @@ document.addEventListener(
 
   }
 );
+// ==========================================
+// AGREGAR STAFF
+// ==========================================
+
+$("openAddStaff").onclick = () => {
+
+  $("addStaffMessage").textContent = "";
+
+  $("addStaffModal").hidden = false;
+
+};
+
+
+$("closeAddStaff").onclick = () => {
+
+  $("addStaffModal").hidden = true;
+
+};
+
+
+$("addStaffForm").onsubmit =
+  async event => {
+
+    event.preventDefault();
+
+
+    const message =
+      $("addStaffMessage");
+
+
+    const staffName =
+      $("newStaffName")
+        .value.trim();
+
+
+    const staffEmail =
+      $("newStaffEmail")
+        .value.trim()
+        .toLowerCase();
+
+
+    message.textContent =
+      "Creando empleado...";
+
+
+    const {
+      data,
+      error
+    } =
+      await db.functions.invoke(
+        "create-business-staff",
+        {
+          body: {
+            business_id:
+              businessId,
+
+            staff_name:
+              staffName,
+
+            staff_email:
+              staffEmail
+          }
+        }
+      );
+
+
+    if (error) {
+
+      console.error(error);
+
+      message.textContent =
+        error.message ||
+        "No se pudo crear el empleado.";
+
+      return;
+
+    }
+
+
+    if (
+      !data ||
+      data.success !== true
+    ) {
+
+      message.textContent =
+        data?.error ||
+        "No se pudo crear el empleado.";
+
+      return;
+
+    }
+
+
+    message.textContent =
+      "✓ Empleado agregado correctamente";
+
+
+    setTimeout(
+      async () => {
+
+        $("addStaffModal").hidden =
+          true;
+
+        $("addStaffForm").reset();
+
+        await loadBusinessStaff();
+
+      },
+      700
+    );
+
+  };
 /* COMPROBAR SESIÓN */
 
 (async () => {
