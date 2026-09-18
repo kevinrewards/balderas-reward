@@ -403,7 +403,14 @@ if (businessSelector) {
 
   }
 
+const selectedMembership =
+  memberships.find(
+    item =>
+      item.business_id === businessId
+  );
 
+currentBusinessRole =
+  selectedMembership?.role || null;
   // Mostrar selector solamente
   // cuando haya más de un negocio.
   businessSelector.hidden =
