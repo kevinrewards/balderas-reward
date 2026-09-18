@@ -1143,7 +1143,7 @@ if (newBusinessLogoInput) {
 // ==========================================
 // CREAR NEGOCIO COMPLETO
 // ==========================================
-
+let creatingBusiness = false;
 const newBusinessForm =
   $("newBusinessForm");
 
@@ -1154,7 +1154,11 @@ if (newBusinessForm) {
     async event => {
 
       event.preventDefault();
+if (creatingBusiness) {
+  return;
+}
 
+creatingBusiness = true;
       const message =
         $("newBusinessMessage");
 
@@ -1462,21 +1466,22 @@ message.textContent =
 
       } catch (error) {
 
-        console.error(error);
+  console.error(error);
 
-        message.textContent =
-          "Error: " +
-          (
-            error.message
-            || "No se pudo crear el negocio"
-          );
+  message.textContent =
+    "Error: " +
+    (
+      error.message ||
+      "No se pudo crear el negocio"
+    );
 
-      } finally {
+} finally {
 
-        button.disabled =
-          false;
+  creatingBusiness = false;
 
-      }
+  button.disabled = false;
+
+}
 
     }
   );
