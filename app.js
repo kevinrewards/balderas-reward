@@ -1965,9 +1965,29 @@ async function loadBusinessStaff() {
   }
 
 
-  const canManageStaff =
-    currentIsSuperAdmin ||
-    currentBusinessRole === "owner";
+  const {
+  data: canManageStaff,
+  error: permissionError
+} =
+  await db.rpc(
+    "can_manage_staff",
+    {
+      target_business_id:
+        businessId
+    }
+  );
+
+if (permissionError) {
+
+  console.error(
+    "Error verificando permisos:",
+    permissionError
+  );
+
+  section.hidden = true;
+
+  return;
+}
 
 
   section.hidden =
@@ -2263,20 +2283,42 @@ document.addEventListener(
 // AGREGAR STAFF
 // ==========================================
 
-$("openAddStaff").onclick = () => {
+$("openAddStaff").onclick =
+  async () => {
 
-  const canCreateStaff =
-    currentIsSuperAdmin ||
-    currentBusinessRole === "owner";
+    const {
+      data: allowed,
+      error
+    } =
+      await db.rpc(
+        "can_manage_staff",
+        {
+          target_business_id:
+            businessId
+        }
+      );
 
-  if (!canCreateStaff) {
 
-    alert(
-      "No tienes permiso para agregar personal."
-    );
+    if (
+      error ||
+      allowed !== true
+    ) {
 
-    return;
-  }
+      alert(
+        "Solo el Owner o Superadmin puede agregar empleados."
+      );
+
+      return;
+    }
+
+
+    $("addStaffMessage").textContent =
+      "";
+
+    $("addStaffModal").hidden =
+      false;
+
+  };
 
   $("addStaffMessage").textContent = "";
 
@@ -2296,6 +2338,33 @@ $("addStaffForm").onsubmit =
   async event => {
 
     event.preventDefault();
+    const {
+  data: allowed,
+  error: permissionError
+} =
+  await db.rpc(
+    "can_manage_staff",
+    {
+      target_business_id:
+        businessId
+    }
+  );
+
+
+if (
+  permissionError ||
+  allowed !== true
+) {
+
+  alert(
+    "No tienes permiso para agregar empleados."
+  );
+
+  $("addStaffModal").hidden =
+    true;
+
+  return;
+}
 const canCreateStaff =
   currentIsSuperAdmin ||
   currentBusinessRole === "owner";
