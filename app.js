@@ -72,7 +72,53 @@ $("form").onsubmit = async e => {
 
   await load();
 };
+/* RECUPERAR CONTRASEÑA */
 
+const forgotPasswordButton =
+  $("forgotPassword");
+
+if (forgotPasswordButton) {
+
+  forgotPasswordButton.onclick =
+    async () => {
+
+      const email =
+        $("email").value.trim();
+
+      if (!email) {
+
+        $("msg").textContent =
+          "Escribe primero tu correo.";
+
+        return;
+      }
+
+      $("msg").textContent =
+        "Enviando enlace de recuperación...";
+
+      const { error } =
+        await db.auth.resetPasswordForEmail(
+          email,
+          {
+            redirectTo:
+              "https://kevinrewards.github.io/balderas-reward/accept-invite.html"
+          }
+        );
+
+      if (error) {
+
+        $("msg").textContent =
+          "Error: " + error.message;
+
+        return;
+      }
+
+      $("msg").textContent =
+        "Revisa tu correo para cambiar la contraseña.";
+
+    };
+
+}
 /* CERRAR SESIÓN */
 
 $("logout").onclick = async () => {
