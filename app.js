@@ -331,13 +331,6 @@ if (superAdminSection) {
   await db.rpc(
     "get_my_businesses"
   );
-    .select(`
-      business_id,
-      role,
-      businesses (
-        name
-      )
-    `);
 
 if (
   membership.error ||
