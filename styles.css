@@ -525,3 +525,39 @@ h2 {
   font-size: 11px;
   line-height: 1.5;
 }
+/* =================================
+   SUPERADMIN - OWNERS
+   ================================= */
+
+.ownerAdminPerson {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: #19191b;
+}
+
+.ownerAvatar {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #24211a;
+  font-size: 23px;
+}
+
+.ownerRole {
+  margin-top: 6px;
+  color: #e1b85d;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.ownerManageButton {
+  width: 100%;
+}
