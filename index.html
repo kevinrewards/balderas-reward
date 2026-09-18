@@ -545,7 +545,81 @@
   </div>
 
 </div>
-</main>
+  <!-- NUEVO STAFF -->
+<div
+  id="addStaffModal"
+  class="adminModal"
+  hidden
+>
+
+  <div class="adminModalBox">
+
+    <div class="adminModalHeader">
+
+      <div>
+
+        <div class="eyebrow">
+          PERSONAL
+        </div>
+
+        <h2>
+          + Agregar empleado
+        </h2>
+
+      </div>
+
+      <button
+        id="closeAddStaff"
+        class="closeAdminButton"
+        type="button">
+        ✕
+      </button>
+
+    </div>
+
+
+    <form id="addStaffForm">
+
+      <label>
+        Nombre completo
+      </label>
+
+      <input
+        id="newStaffName"
+        type="text"
+        placeholder="Nombre del empleado"
+        required
+      >
+
+
+      <label>
+        Correo electrónico
+      </label>
+
+      <input
+        id="newStaffEmail"
+        type="email"
+        placeholder="correo@ejemplo.com"
+        required
+      >
+
+
+      <button type="submit">
+        ENVIAR INVITACIÓN
+      </button>
+
+
+      <p
+        id="addStaffMessage"
+        class="message">
+      </p>
+
+    </form>
+
+  </div>
+
+</div>
+                                      </main>
 
 <dialog id="clientDialog">
 
