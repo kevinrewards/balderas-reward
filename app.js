@@ -2306,14 +2306,6 @@ $("openAddStaff").onclick =
     }
 
 
-    $("addStaffMessage").textContent =
-      "";
-
-    $("addStaffModal").hidden =
-      false;
-
-  };
-
   $("addStaffMessage").textContent = "";
 
   $("addStaffModal").hidden = false;
