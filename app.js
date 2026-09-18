@@ -327,9 +327,10 @@ if (superAdminSection) {
   $("status").textContent =
     "Sincronizando…";
 
-  const membership =
-  await db
-    .from("business_members")
+ const membership =
+  await db.rpc(
+    "get_my_businesses"
+  );
     .select(`
       business_id,
       role,
@@ -371,7 +372,7 @@ if (businessSelector) {
       <option
         value="${item.business_id}">
         ${escapeHtml(
-          item.businesses?.name ||
+          item.business_name ||
           "Negocio"
         )}
       </option>
