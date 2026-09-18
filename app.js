@@ -1666,6 +1666,188 @@ if (closeOwnersAdminButton) {
   };
 
 }
+// ==========================================
+// ADMINISTRAR OWNER
+// ==========================================
+
+let selectedOwner = null;
+
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const button =
+      event.target.closest(
+        ".ownerManageButton"
+      );
+
+    if (!button) return;
+
+
+    const ownerCard =
+      button.closest(
+        ".businessAdminItem"
+      );
+
+
+    selectedOwner = {
+
+      businessId:
+        button.dataset.businessId,
+
+      userId:
+        button.dataset.userId,
+
+      name:
+        ownerCard
+          ?.querySelector(
+            ".ownerAdminPerson strong"
+          )
+          ?.textContent
+          ?.trim()
+          || "Owner",
+
+      email:
+        ownerCard
+          ?.querySelector(
+            ".ownerAdminPerson .muted"
+          )
+          ?.textContent
+          ?.trim()
+          || "",
+
+      businessName:
+        ownerCard
+          ?.querySelector(
+            ".businessAdminTop strong"
+          )
+          ?.textContent
+          ?.trim()
+          || ""
+
+    };
+
+
+    $("ownerManageName").textContent =
+      selectedOwner.name;
+
+    $("ownerManageEmail").textContent =
+      selectedOwner.email;
+
+    $("ownerManageBusiness").textContent =
+      selectedOwner.businessName;
+
+
+    $("ownerManageMessage").textContent =
+      "";
+
+
+    $("ownersAdminModal").hidden =
+      true;
+
+    $("ownerManageModal").hidden =
+      false;
+
+  }
+);
+
+
+// CERRAR MODAL
+$("closeOwnerManage").onclick = () => {
+
+  $("ownerManageModal").hidden =
+    true;
+
+  $("ownersAdminModal").hidden =
+    false;
+
+};
+
+
+// REENVIAR ACCESO
+$("resendOwnerAccess").onclick =
+  async () => {
+
+    if (!selectedOwner) return;
+
+
+    const button =
+      $("resendOwnerAccess");
+
+    const message =
+      $("ownerManageMessage");
+
+
+    if (
+      !confirm(
+        "¿Reenviar acceso a " +
+        selectedOwner.name +
+        "?"
+      )
+    ) {
+      return;
+    }
+
+
+    button.disabled = true;
+
+    message.textContent =
+      "Enviando correo...";
+
+
+    const {
+      data,
+      error
+    } =
+      await db.functions.invoke(
+        "resend-owner-access",
+        {
+          body: {
+            owner_user_id:
+              selectedOwner.userId
+          }
+        }
+      );
+
+
+    if (error) {
+
+      console.error(error);
+
+      message.textContent =
+        "No se pudo reenviar el acceso.";
+
+      button.disabled = false;
+
+      return;
+
+    }
+
+
+    if (
+      !data ||
+      data.success !== true
+    ) {
+
+      message.textContent =
+        data?.error ||
+        "No se pudo reenviar el acceso.";
+
+      button.disabled = false;
+
+      return;
+
+    }
+
+
+    message.textContent =
+      "✓ Acceso enviado a " +
+      data.email;
+
+    button.disabled = false;
+
+  };
 /* COMPROBAR SESIÓN */
 
 (async () => {
