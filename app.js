@@ -7,6 +7,7 @@ const $ = id => document.getElementById(id);
 
 let businessId = null;
 let rewards = [];
+let currentProgressDesign = {};
 
 let currentBusinessRole = null;
 let currentIsSuperAdmin = false;
@@ -22,16 +23,7 @@ const esc = s =>
 
 /* CREA LAS ESTRELLAS */
 function makeStars(completed, total = 10) {
-
-  completed = Math.min(
-    Math.max(completed, 0),
-    total
-  );
-
-  return Array.from(
-    { length: total },
-    (_, i) => i < completed ? "★" : "☆"
-  ).join("");
+  return esc(window.LoyaltyProgress.render(completed, total, currentProgressDesign));
 }
 
 function loginView() {
@@ -477,7 +469,8 @@ currentBusinessRole =
     customers,
     visits,
     rewardData,
-    redemptions
+    redemptions,
+    progressDesign
   ] = await Promise.all([
 
     db
@@ -512,9 +505,13 @@ currentBusinessRole =
       .select(
         "customer_id,visits_spent"
       )
+      .eq("business_id", businessId),
+    db.from("business_branding")
+      .select("progress_emoji,empty_emoji")
       .eq("business_id", businessId)
-
+      .maybeSingle()
   ]);
+  currentProgressDesign = window.LoyaltyProgress.normalize(progressDesign.data);
 
   const error =
     business.error ||

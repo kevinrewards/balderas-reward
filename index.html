@@ -768,6 +768,24 @@
   <button id="retryRewardManager" type="button" class="secondary" hidden>Reintentar</button>
   <div id="rewardManagerList"></div>
   <button id="newManagedReward" type="button" class="secondary" hidden>+ Nueva recompensa</button>
+  <form id="progressDesignForm" hidden>
+    <h3>Diseño de los sellos</h3>
+    <p class="muted">Se aplica a las tarjetas de este negocio. No cambia visitas ni recompensas.</p>
+    <div class="progressPresets" aria-label="Diseños sugeridos">
+      <button type="button" class="secondary" data-progress-preset="stars">★ Estrellas</button>
+      <button type="button" class="secondary" data-progress-preset="camera">📷 Fotografía</button>
+      <button type="button" class="secondary" data-progress-preset="christmas">🎄 Navidad</button>
+      <button type="button" class="secondary" data-progress-preset="halloween">🎃 Halloween</button>
+      <button type="button" class="secondary" data-progress-preset="love">❤️ Amor</button>
+    </div>
+    <label for="progressFilledSymbol">Símbolo de visita completada</label>
+    <input id="progressFilledSymbol" maxlength="16" required placeholder="📷">
+    <label for="progressEmptySymbol">Símbolo de visita pendiente</label>
+    <input id="progressEmptySymbol" maxlength="16" required placeholder="○">
+    <p id="progressDesignPreview" aria-label="Vista previa: 3 de 5 visitas"></p>
+    <p id="progressDesignMessage" role="status"></p>
+    <button type="submit">Guardar diseño</button>
+  </form>
   <form id="rewardEditorForm" hidden>
     <h3 id="rewardEditorTitle">Nueva recompensa</h3>
     <label for="managedRewardName">Nombre</label>
@@ -786,9 +804,10 @@
     </div>
   </form>
 </dialog>
-<script src="app.js?v=41"></script>
-<script src="reward-manager.js?v=1"></script>
-<script src="business-control.js?v=2"></script>
+<script src="progress-design.js?v=1"></script>
+<script src="app.js?v=42"></script>
+<script src="reward-manager.js?v=2"></script>
+<script src="business-control.js?v=3"></script>
 
 </body>
 </html>

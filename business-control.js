@@ -82,7 +82,8 @@ const businessControl = (() => {
           )).join("") || empty("No hay recompensas configuradas."));
       } else {
         const branding = result.data;
-        panel.innerHTML = empty("Configuración actual (solo consulta).") +
+        panel.innerHTML = '<button type="button" data-control-rewards>Editar diseño de los sellos</button>' +
+          empty("Los demás datos de personalización se muestran como consulta.") +
           (branding ? [
             ["Programa", branding.program_name],
             ["Meta de visitas", branding.progress_goal],
@@ -107,8 +108,8 @@ const businessControl = (() => {
       if (currentIsSuperAdmin && selectedBusinessManage && !$("businessManageModal").hidden) {
         const id = selectedBusinessManage.businessId;
         await window.rewardManager.open(id, selectedBusinessManage.businessName, async () => {
-          if (selectedBusinessManage?.businessId === id && !$("businessManageModal").hidden && activeTab === "rewards") {
-            await show("rewards");
+          if (selectedBusinessManage?.businessId === id && !$("businessManageModal").hidden && ["rewards", "branding"].includes(activeTab)) {
+            await show(activeTab);
           }
         });
       }

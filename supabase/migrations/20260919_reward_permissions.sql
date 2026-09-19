@@ -1,5 +1,5 @@
--- Two write-policy changes were applied manually and confirmed by the user.
--- The SELECT policy below is still pending application before publication.
+-- All three policy changes were applied manually and confirmed by the user.
+-- Kept here as the versioned record; no need to reapply for the design change.
 BEGIN;
 
 ALTER POLICY "Members can create rewards" ON public.rewards

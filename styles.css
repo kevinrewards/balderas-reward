@@ -14,6 +14,9 @@
 }
 #rewardManagerDialog::backdrop { background: rgb(0 0 0 / 75%); }
 #rewardEditorForm { border-top: 1px solid #38383c; margin-top: 20px; padding-top: 16px; }
+#progressDesignForm { border-top: 1px solid #38383c; margin-top: 20px; padding-top: 16px; }
+.progressPresets, .rewardRowActions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+#progressDesignPreview { font-size: 28px; overflow-wrap: anywhere; }
 #rewardEditorForm textarea {
   width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #38383c;
   border-radius: 12px; color: white; background: #101011; font: inherit;

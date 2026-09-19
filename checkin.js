@@ -15,6 +15,7 @@ const token =
   params.get("token");
 
 let customer = null;
+let currentProgressDesign = {};
 
 
 /* ESTRELLAS */
@@ -24,17 +25,7 @@ function makeStars(
   total = 10
 ) {
 
-  completed =
-    Math.min(
-      Math.max(completed, 0),
-      total
-    );
-
-  return Array.from(
-    { length: total },
-    (_, i) =>
-      i < completed ? "★" : "☆"
-  ).join("");
+  return window.LoyaltyProgress.render(completed, total, currentProgressDesign);
 
 }
 
@@ -165,6 +156,7 @@ async function loadCustomer() {
 
   const first =
     data[0];
+  currentProgressDesign = await window.LoyaltyProgress.forToken(db, token);
 
   /*
     COMPROBAR QUE EL USUARIO

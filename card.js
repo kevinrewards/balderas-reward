@@ -4,18 +4,11 @@ const db = supabase.createClient(
 );
 
 const $ = id => document.getElementById(id);
+let currentProgressDesign = {};
 
 function makeStars(completed, total) {
 
-  completed = Math.min(
-    Math.max(completed, 0),
-    total
-  );
-
-  return Array.from(
-    { length: total },
-    (_, i) => i < completed ? "★" : "☆"
-  ).join("");
+  return window.LoyaltyProgress.render(completed, total, currentProgressDesign);
 }
 
 function escapeHTML(value) {
@@ -67,6 +60,7 @@ async function loadCard() {
   }
 
   const first = data[0];
+  currentProgressDesign = await window.LoyaltyProgress.forToken(db, token);
 
   const available =
     Number(first.available_visits || 0);
@@ -142,10 +136,10 @@ async function loadCard() {
             }
 
             <div class="rewardStars">
-              ${makeStars(
+              ${escapeHTML(makeStars(
                 completed,
                 required
-              )}
+              ))}
             </div>
 
             <div class="rewardCounter">
