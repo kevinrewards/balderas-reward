@@ -1746,7 +1746,7 @@ message.textContent =
 // BALDERAS SUPERADMIN - OWNERS
 // ==========================================
 
-async function openOwnersAdmin() {
+async function openOwnersAdmin({ reveal = true } = {}) {
 
   const modal =
     $("ownersAdminModal");
@@ -1758,7 +1758,7 @@ async function openOwnersAdmin() {
   if (!modal || !list) return;
 
 
-  modal.hidden = false;
+  if (reveal) modal.hidden = false;
 
   list.innerHTML =
     "<p>Cargando Owners...</p>";
@@ -1833,12 +1833,12 @@ async function openOwnersAdmin() {
           </div>
 
 
-          <span class="businessStatus">
+          <span class="businessStatus ${owner.membership_active === true ? 'ownerActive' : 'ownerInactive'}">
 
             ${
-              owner.membership_active
+              owner.membership_active === true
                 ? "● ACTIVO"
-                : "○ INACTIVO"
+                : "● DESACTIVADO"
             }
 
           </span>
@@ -1882,6 +1882,7 @@ async function openOwnersAdmin() {
         <button
           type="button"
           class="secondary ownerManageButton"
+          data-owner-active="${owner.membership_active === true}"
           data-business-id="${owner.business_id}"
           data-user-id="${owner.user_id}">
           Administrar
@@ -1931,6 +1932,14 @@ if (closeOwnersAdminButton) {
 // ==========================================
 
 let selectedOwner = null;
+
+function showOwnerMembershipStatus(active) {
+  const badge = $("ownerManageStatus");
+  badge.textContent = active ? "● ACTIVO" : "● DESACTIVADO";
+  badge.className = "businessStatus " + (active ? "ownerActive" : "ownerInactive");
+  $("deactivateOwner").hidden = !active;
+  $("reactivateOwner").hidden = active;
+}
 
 
 document.addEventListener(
@@ -1997,6 +2006,7 @@ document.addEventListener(
 
     $("ownerManageBusiness").textContent =
       selectedOwner.businessName;
+    showOwnerMembershipStatus(button.dataset.ownerActive === "true");
 
 
     $("ownerManageMessage").textContent =
@@ -2019,8 +2029,7 @@ $("closeOwnerManage").onclick = () => {
   $("ownerManageModal").hidden =
     true;
 
-  $("ownersAdminModal").hidden =
-    false;
+  openOwnersAdmin();
 
 };
 

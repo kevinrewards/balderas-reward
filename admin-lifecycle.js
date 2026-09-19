@@ -62,7 +62,13 @@ window.adminLifecycle = (() => {
         (result.cleanup_pending ? " Hay bajas de cuentas pendientes: usa Reintentar bajas en BALDERAS Admin." : "");
       if (action === "delete_business") { businessControl.close(); $("businessManageModal").hidden = true; }
       if (action === "remove_owner") $("ownerManageModal").hidden = true;
+      if (["deactivate", "reactivate"].includes(action) && selectedOwner?.businessId === business.businessId && selectedOwner?.userId === userId) {
+        showOwnerMembershipStatus(action === "reactivate");
+      }
       await load();
+      // load() refreshes the business dashboard, not the separate Owners list.
+      // Refresh that list from the server without reopening a hidden modal.
+      await openOwnersAdmin({ reveal: false });
       $("status").textContent = text;
       alert(text);
       return true;

@@ -398,6 +398,8 @@ h2 {
   font-weight: 800;
   color: #d9b45f;
 }
+.businessStatus.ownerInactive { color: #ff8585; }
+.businessStatus.ownerActive { color: #80dca0; }
 
 .businessAdminInfo {
   display: grid;
