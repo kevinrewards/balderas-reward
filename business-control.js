@@ -71,7 +71,7 @@ const businessControl = (() => {
           index + '" data-control-action="remove">Quitar del negocio</button></div></article>'
         ).join("") || empty(tab === "owners" ? "No hay Owners vinculados." : "No hay Staff vinculado.");
       } else if (tab === "customers") {
-        panel.innerHTML = (result.data || []).map(customer =>
+        panel.innerHTML = '<button type="button" data-control-history>Historial de visitas</button>' + (result.data || []).map(customer =>
           item(customer.name, customer.active ? "Cliente activo" : "Cliente inactivo")
         ).join("") || empty("No hay clientes registrados.");
       } else if (tab === "rewards") {
@@ -104,6 +104,12 @@ const businessControl = (() => {
   }
 
   panel.addEventListener("click", async event => {
+    if (event.target.closest("[data-control-history]")) {
+      if (currentIsSuperAdmin && selectedBusinessManage && !$("businessManageModal").hidden) {
+        await window.visitHistory.open(selectedBusinessManage.businessId, selectedBusinessManage.businessName);
+      }
+      return;
+    }
     if (event.target.closest("[data-control-rewards]")) {
       if (currentIsSuperAdmin && selectedBusinessManage && !$("businessManageModal").hidden) {
         const id = selectedBusinessManage.businessId;

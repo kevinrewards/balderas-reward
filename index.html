@@ -110,6 +110,7 @@
 
       <div class="sectionhead">
         <h2><button type="button" class="sectionToggle" data-section="customers" aria-expanded="true">Clientes <span aria-hidden="true">⌄</span></button></h2>
+        <button id="openVisitHistory" type="button" class="secondary compact" hidden>Historial de visitas</button>
 
         <button id="newClient" class="secondary compact">
           + Nuevo cliente
@@ -288,6 +289,7 @@
 
     <section id="businessControlPanel" aria-label="Información del negocio" aria-live="polite"></section>
     <button id="deleteBusiness" type="button" class="dangerButton">Eliminar negocio…</button>
+    <button id="businessVisitHistory" type="button" class="secondary">Historial de visitas</button>
 
     <p
       id="businessManageMessage"
@@ -814,9 +816,26 @@
 </dialog>
 <script src="progress-design.js?v=1"></script>
 <script src="card-links.js?v=1"></script>
-<script src="app.js?v=44"></script>
+<dialog id="visitHistoryDialog" class="card" aria-labelledby="historyTitle">
+  <div class="sectionhead"><h2 id="historyTitle">Historial de visitas</h2><button id="closeVisitHistory" type="button" class="secondary">Cerrar</button></div>
+  <p id="historyZone" class="muted"></p>
+  <form id="historyFilters" class="historyFilters">
+    <label>Período<select id="historyPeriod"><option value="today">Hoy</option><option value="week">Esta semana</option><option value="month">Este mes</option><option value="custom">Fechas personalizadas</option></select></label>
+    <label>Desde<input id="historyStart" type="date" required></label>
+    <label>Hasta<input id="historyEnd" type="date" required></label>
+    <button id="historyApply" type="submit">Consultar</button>
+  </form>
+  <p id="historyTotals" aria-live="polite"></p>
+  <button id="historyExport" type="button" class="secondary" disabled>Descargar CSV (Excel)</button>
+  <p class="muted">Los nombres son los disponibles actualmente. Una visita sin responsable registrado se identifica como tal.</p>
+  <div class="historyTable"><table><thead><tr><th>Cliente</th><th>Fecha y hora</th><th>Registró / aprobó</th></tr></thead><tbody id="historyRows"></tbody></table></div>
+  <p id="historyMessage" role="status"></p>
+  <div class="staffActions"><button id="historyPrevious" type="button" class="secondary" disabled>Anterior</button><button id="historyNext" type="button" class="secondary" disabled>Siguiente</button></div>
+</dialog>
+<script src="app.js?v=45"></script>
 <script src="reward-manager.js?v=2"></script>
-<script src="business-control.js?v=4"></script>
+<script src="business-control.js?v=5"></script>
+<script src="visit-history.js?v=1"></script>
 <script src="admin-lifecycle.js?v=1"></script>
 <script src="dashboard-sections.js?v=1"></script>
 

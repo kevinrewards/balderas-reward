@@ -27,6 +27,7 @@ function makeStars(completed, total = 10) {
 }
 
 function loginView() {
+  window.visitHistory?.close();
   window.rewardManager?.close();
   if ($("editBusinessRewards")) $("editBusinessRewards").hidden = true;
   $("login").hidden = false;
@@ -333,6 +334,7 @@ async function shareCard(token, customerName) {
 /* CARGAR DATOS */
 
 async function load() {
+  window.visitHistory?.close();
   if ($("editBusinessRewards")) $("editBusinessRewards").hidden = true;
 
   appView();
@@ -372,6 +374,7 @@ if (
 ) {
   businessId = null;
   currentBusinessRole = null;
+  window.visitHistory?.sync();
   $("businessWorkspace").hidden = true;
   $("businessSelector").hidden = true;
   $("biz").textContent = isSuperAdmin ? "BALDERAS Admin" : "Mi negocio";
@@ -445,6 +448,7 @@ const selectedMembership =
 currentBusinessRole =
   selectedMembership?.role || null;
 window.dashboardSections?.sync();
+window.visitHistory?.sync();
   // Mostrar selector solamente
   // cuando haya más de un negocio.
   businessSelector.hidden =
