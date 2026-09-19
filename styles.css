@@ -647,3 +647,23 @@ h2 {
   width: 100%;
   box-sizing: border-box;
 }
+/* Business control sections */
+#businessManageModal .adminMenu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#businessManageModal .adminMenu button {
+  flex: 1 1 130px;
+}
+#businessManageModal button[aria-pressed="true"] {
+  border: 2px solid #e1b85d;
+  color: #e1b85d;
+}
+#businessControlPanel {
+  margin-top: 20px;
+  overflow-wrap: anywhere;
+}
+#businessManageMessage {
+  overflow-wrap: anywhere;
+}
