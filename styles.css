@@ -673,6 +673,13 @@ h2 {
   box-sizing: border-box;
 }
 /* Business control sections */
+.sectionToggle { background: transparent; color: inherit; border: 0; padding: 6px 0; font: inherit; text-align: left; }
+.sectionToggle span { display: inline-block; margin-left: 12px; }
+.sectionToggle[aria-expanded="false"] span { transform: rotate(-90deg); }
+.sectionToggle:disabled { opacity: 1; cursor: default; }
+.sectionToggle:disabled span { display: none; }
+.sectionToggle:focus-visible { outline: 2px solid #e1b85d; outline-offset: 4px; }
+#deleteBusiness { margin-top: 24px; }
 #businessManageModal .adminMenu {
   display: flex;
   flex-wrap: wrap;

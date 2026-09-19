@@ -51,6 +51,7 @@
       <button id="logout" class="secondary">Salir</button>
     </div>
 
+    <div id="businessWorkspace">
     <div class="stats">
       <div>
         <b id="cc">—</b>
@@ -84,7 +85,7 @@
   <div class="sectionhead">
 
     <div>
-      <h2>👥 Personal</h2>
+      <h2><button type="button" class="sectionToggle" data-section="staffBody" aria-expanded="true">👥 Personal <span aria-hidden="true">⌄</span></button></h2>
 
       <p class="muted">
         Usuarios con acceso a este negocio
@@ -100,15 +101,15 @@
 
   </div>
 
-  <div id="staffList">
+  <div id="staffBody"><div id="staffList">
     Cargando...
-  </div>
+  </div></div>
 
 </section>
     <section class="card">
 
       <div class="sectionhead">
-        <h2>Clientes</h2>
+        <h2><button type="button" class="sectionToggle" data-section="customers" aria-expanded="true">Clientes <span aria-hidden="true">⌄</span></button></h2>
 
         <button id="newClient" class="secondary compact">
           + Nuevo cliente
@@ -121,11 +122,12 @@
 
     <section class="card">
   <div class="sectionhead">
-    <h2>Recompensas</h2>
+    <h2><button type="button" class="sectionToggle" data-section="rewards" aria-expanded="true">Recompensas <span aria-hidden="true">⌄</span></button></h2>
     <button id="editBusinessRewards" type="button" class="secondary compact" hidden>Administrar recompensas</button>
   </div>
   <div id="rewards"></div>
 </section>
+    </div>
 
 
 <!-- PANEL SUPERADMIN BALDERAS -->
@@ -285,6 +287,7 @@
 
 
     <section id="businessControlPanel" aria-label="Información del negocio" aria-live="polite"></section>
+    <button id="deleteBusiness" type="button" class="dangerButton">Eliminar negocio…</button>
 
     <p
       id="businessManageMessage"
@@ -633,6 +636,11 @@
       type="button">
       ✉️ Reenviar acceso
     </button>
+    <div class="staffActions">
+      <button id="deactivateOwner" type="button" class="secondary">Desactivar en este negocio</button>
+      <button id="reactivateOwner" type="button" class="secondary">Reactivar en este negocio</button>
+      <button id="removeOwner" type="button" class="dangerButton">Eliminar Owner de este negocio…</button>
+    </div>
 
     <p
       id="ownerManageMessage"
@@ -806,9 +814,11 @@
 </dialog>
 <script src="progress-design.js?v=1"></script>
 <script src="card-links.js?v=1"></script>
-<script src="app.js?v=43"></script>
+<script src="app.js?v=44"></script>
 <script src="reward-manager.js?v=2"></script>
-<script src="business-control.js?v=3"></script>
+<script src="business-control.js?v=4"></script>
+<script src="admin-lifecycle.js?v=1"></script>
+<script src="dashboard-sections.js?v=1"></script>
 
 </body>
 </html>

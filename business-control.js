@@ -123,6 +123,12 @@ const businessControl = (() => {
     if (!member || !["deactivate", "reactivate", "remove"].includes(action)) return;
     const id = selectedBusinessManage?.businessId;
     if (!id) return;
+    if (member.role === "owner") {
+      const changed = await window.adminLifecycle.run(action === "remove" ? "remove_owner" : action,
+        { ...selectedBusinessManage }, member.user_id);
+      if (changed && selectedBusinessManage?.businessId === id) await show(activeTab);
+      return;
+    }
     const verb = { deactivate: "Desactivar", reactivate: "Reactivar", remove: "Quitar del negocio a" }[action];
     if (!confirm(verb + " " + (member.full_name || member.email) + " en " +
       selectedBusinessManage.businessName + "?" +

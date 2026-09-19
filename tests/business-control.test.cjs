@@ -93,9 +93,10 @@ test("late response cannot replace a newer section", async () => {
   assert.doesNotMatch(e.businessControlPanel.innerHTML, /Stale/);
 });
 
-test("member mutation uses selected B, never dashboard A; double click ignored", async () => {
+test("Staff mutation uses selected B, never dashboard A; double click ignored", async () => {
   const { context: c, elements: e, calls } = setup();
   await c.control.open();
+  await e.businessManageStaff.onclick();
   const button = { dataset: { controlMember: "0", controlAction: "deactivate" } };
   const event = { target: { closest: selector => selector === "[data-control-member]" ? button : null } };
   const first = e.businessControlPanel.click(event);
@@ -104,9 +105,22 @@ test("member mutation uses selected B, never dashboard A; double click ignored",
   const writes = calls.filter(call => call[0] === "manage_business_member");
   assert.equal(writes.length, 1);
   assert.equal(writes[0][1].target_business_id, "B");
-  assert.equal(writes[0][1].target_user_id, "o1");
+  assert.equal(writes[0][1].target_user_id, "s1");
   assert.equal(e.closeBusinessManage.disabled, false);
   assert.match(e.businessManageMessage.textContent, /guardado/);
+});
+
+test("Owner removal uses lifecycle flow for the selected business", async () => {
+  const { context: c, elements: e, calls } = setup();
+  c.window = { adminLifecycle: { run: async (...args) => { calls.push(["lifecycle", ...args]); return true; } } };
+  await c.control.open();
+  const button = { dataset: { controlMember: "0", controlAction: "remove" } };
+  await e.businessControlPanel.click({ target: { closest: selector => selector === "[data-control-member]" ? button : null } });
+  const call = calls.find(call => call[0] === "lifecycle");
+  assert.equal(call[1], "remove_owner");
+  assert.equal(call[2].businessId, "B");
+  assert.equal(call[3], "o1");
+  assert.ok(!calls.some(call => call[0] === "manage_business_member"));
 });
 
 test("close invalidates in-flight data", async () => {

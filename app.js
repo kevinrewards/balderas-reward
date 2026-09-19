@@ -219,7 +219,6 @@ async function redeem(
   rewardId,
   rewardName
 ) {
-
   if (
     !confirm(
       '¿Canjear "' +
@@ -371,6 +370,11 @@ if (
   !membership.data ||
   !membership.data.length
 ) {
+  businessId = null;
+  currentBusinessRole = null;
+  $("businessWorkspace").hidden = true;
+  $("businessSelector").hidden = true;
+  $("biz").textContent = isSuperAdmin ? "BALDERAS Admin" : "Mi negocio";
 
   $("status").textContent =
     "No encontré un negocio vinculado.";
@@ -381,6 +385,7 @@ if (
 
 const memberships =
   membership.data;
+$("businessWorkspace").hidden = false;
 
 
 // ------------------------------------
@@ -439,6 +444,7 @@ const selectedMembership =
 
 currentBusinessRole =
   selectedMembership?.role || null;
+window.dashboardSections?.sync();
   // Mostrar selector solamente
   // cuando haya más de un negocio.
   businessSelector.hidden =
