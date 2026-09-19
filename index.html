@@ -51,6 +51,7 @@
       <button id="logout" class="secondary">Salir</button>
     </div>
 
+    <div id="businessWorkspace">
     <div class="stats">
       <div>
         <b id="cc">—</b>
@@ -84,7 +85,7 @@
   <div class="sectionhead">
 
     <div>
-      <h2>👥 Personal</h2>
+      <h2><button type="button" class="sectionToggle" data-section="staffBody" aria-expanded="true">👥 Personal <span aria-hidden="true">⌄</span></button></h2>
 
       <p class="muted">
         Usuarios con acceso a este negocio
@@ -100,15 +101,16 @@
 
   </div>
 
-  <div id="staffList">
+  <div id="staffBody"><div id="staffList">
     Cargando...
-  </div>
+  </div></div>
 
 </section>
     <section class="card">
 
       <div class="sectionhead">
-        <h2>Clientes</h2>
+        <h2><button type="button" class="sectionToggle" data-section="customers" aria-expanded="true">Clientes <span aria-hidden="true">⌄</span></button></h2>
+        <button id="openVisitHistory" type="button" class="secondary compact" hidden>Historial de visitas</button>
 
         <button id="newClient" class="secondary compact">
           + Nuevo cliente
@@ -120,9 +122,13 @@
     </section>
 
     <section class="card">
-  <h2>Recompensas</h2>
+  <div class="sectionhead">
+    <h2><button type="button" class="sectionToggle" data-section="rewards" aria-expanded="true">Recompensas <span aria-hidden="true">⌄</span></button></h2>
+    <button id="editBusinessRewards" type="button" class="secondary compact" hidden>Administrar recompensas</button>
+  </div>
   <div id="rewards"></div>
 </section>
+    </div>
 
 
 <!-- PANEL SUPERADMIN BALDERAS -->
@@ -258,6 +264,13 @@
       </button>
 
       <button
+        id="businessManageCustomers"
+        type="button"
+        class="secondary">
+        Clientes
+      </button>
+
+      <button
         id="businessManageRewards"
         type="button"
         class="secondary">
@@ -273,6 +286,10 @@
 
     </div>
 
+
+    <section id="businessControlPanel" aria-label="Información del negocio" aria-live="polite"></section>
+    <button id="deleteBusiness" type="button" class="dangerButton">Eliminar negocio…</button>
+    <button id="businessVisitHistory" type="button" class="secondary">Historial de visitas</button>
 
     <p
       id="businessManageMessage"
@@ -565,6 +582,7 @@
       Propietarios registrados en BALDERAS Reward.
     </p>
 
+    <button id="openOwnerAssignment" type="button">+ Crear o asignar Owner</button>
     <div id="ownersAdminList">
       Cargando...
     </div>
@@ -616,11 +634,17 @@
 
     </div>
 
+    <p id="ownerManageStatus" class="businessStatus" role="status"></p>
     <button
       id="resendOwnerAccess"
       type="button">
       ✉️ Reenviar acceso
     </button>
+    <div class="staffActions">
+      <button id="deactivateOwner" type="button" class="secondary">Desactivar en este negocio</button>
+      <button id="reactivateOwner" type="button" class="secondary">Reactivar en este negocio</button>
+      <button id="removeOwner" type="button" class="dangerButton">Eliminar Owner de este negocio…</button>
+    </div>
 
     <p
       id="ownerManageMessage"
@@ -746,7 +770,89 @@
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=39"></script>
+<dialog id="rewardManagerDialog" aria-labelledby="rewardManagerTitle">
+  <div class="sectionhead">
+    <h2 id="rewardManagerTitle">Administrar recompensas</h2>
+    <button id="closeRewardManager" type="button" class="secondary" aria-label="Cerrar recompensas">Cerrar</button>
+  </div>
+  <p id="rewardManagerBusiness" class="muted"></p>
+  <p id="rewardManagerMessage" role="status"></p>
+  <button id="retryRewardManager" type="button" class="secondary" hidden>Reintentar</button>
+  <div id="rewardManagerList"></div>
+  <button id="newManagedReward" type="button" class="secondary" hidden>+ Nueva recompensa</button>
+  <form id="progressDesignForm" hidden>
+    <h3>Diseño de los sellos</h3>
+    <p class="muted">Se aplica a las tarjetas de este negocio. No cambia visitas ni recompensas.</p>
+    <div class="progressPresets" aria-label="Diseños sugeridos">
+      <button type="button" class="secondary" data-progress-preset="stars">★ Estrellas</button>
+      <button type="button" class="secondary" data-progress-preset="camera">📷 Fotografía</button>
+      <button type="button" class="secondary" data-progress-preset="christmas">🎄 Navidad</button>
+      <button type="button" class="secondary" data-progress-preset="halloween">🎃 Halloween</button>
+      <button type="button" class="secondary" data-progress-preset="love">❤️ Amor</button>
+    </div>
+    <label for="progressFilledSymbol">Símbolo de visita completada</label>
+    <input id="progressFilledSymbol" maxlength="16" required placeholder="📷">
+    <label for="progressEmptySymbol">Símbolo de visita pendiente</label>
+    <input id="progressEmptySymbol" maxlength="16" required placeholder="○">
+    <p id="progressDesignPreview" aria-label="Vista previa: 3 de 5 visitas"></p>
+    <p id="progressDesignMessage" role="status"></p>
+    <button type="submit">Guardar diseño</button>
+  </form>
+  <form id="rewardEditorForm" hidden>
+    <h3 id="rewardEditorTitle">Nueva recompensa</h3>
+    <label for="managedRewardName">Nombre</label>
+    <input id="managedRewardName" required maxlength="200">
+    <label for="managedRewardDescription">Descripción</label>
+    <textarea id="managedRewardDescription" rows="3" maxlength="2000"></textarea>
+    <label for="managedRewardVisits">Visitas necesarias para canjear</label>
+    <input id="managedRewardVisits" type="number" min="1" max="100" step="1" required>
+    <label for="managedRewardActive" class="rewardCheckbox">
+      <input id="managedRewardActive" type="checkbox"> Recompensa activa
+    </label>
+    <p class="muted">Los cambios se aplicarán a próximos canjes. Los canjes ya registrados conservan sus visitas consumidas.</p>
+    <div class="actions">
+      <button id="cancelRewardEdit" type="button" class="secondary">Cancelar</button>
+      <button type="submit">Guardar recompensa</button>
+    </div>
+  </form>
+</dialog>
+<script src="progress-design.js?v=1"></script>
+<script src="card-links.js?v=1"></script>
+<dialog id="visitHistoryDialog" class="card" aria-labelledby="historyTitle">
+  <div class="sectionhead"><h2 id="historyTitle">Historial de visitas</h2><button id="closeVisitHistory" type="button" class="secondary">Cerrar</button></div>
+  <p id="historyZone" class="muted"></p>
+  <form id="historyFilters" class="historyFilters">
+    <label>Período<select id="historyPeriod"><option value="today">Hoy</option><option value="week">Esta semana</option><option value="month">Este mes</option><option value="custom">Fechas personalizadas</option></select></label>
+    <label>Desde<input id="historyStart" type="date" required></label>
+    <label>Hasta<input id="historyEnd" type="date" required></label>
+    <button id="historyApply" type="submit">Consultar</button>
+  </form>
+  <p id="historyTotals" aria-live="polite"></p>
+  <button id="historyExport" type="button" class="secondary" disabled>Descargar CSV (Excel)</button>
+  <p class="muted">Los nombres son los disponibles actualmente. Una visita sin responsable registrado se identifica como tal.</p>
+  <div class="historyTable"><table><thead><tr><th>Cliente</th><th>Fecha y hora</th><th>Registró / aprobó</th></tr></thead><tbody id="historyRows"></tbody></table></div>
+  <p id="historyMessage" role="status"></p>
+  <div class="staffActions"><button id="historyPrevious" type="button" class="secondary" disabled>Anterior</button><button id="historyNext" type="button" class="secondary" disabled>Siguiente</button></div>
+</dialog>
+<dialog id="ownerAssignmentDialog" class="card" aria-labelledby="ownerAssignmentTitle">
+  <div class="sectionhead"><h2 id="ownerAssignmentTitle">Crear o asignar Owner</h2><button id="closeOwnerAssignment" type="button" class="secondary">Cerrar</button></div>
+  <form id="ownerAssignmentForm">
+    <label>Nombre del Owner<input id="ownerAssignmentName" required maxlength="150" autocomplete="name"></label>
+    <label>Correo<input id="ownerAssignmentEmail" type="email" required autocomplete="email"></label>
+    <label>Negocio existente<select id="ownerAssignmentBusiness" required></select></label>
+    <p class="muted">Si el correo ya tiene cuenta, se conserva su nombre y se agrega el acceso al negocio seleccionado. Puedes repetir el proceso para asignarle más negocios.</p>
+    <label><input id="ownerAssignmentConsent" type="checkbox" required> Confirmo el acceso de Owner activo a este negocio. Si ya es Staff aquí, pasará a Owner; si estaba desactivado como Owner, se reactivará.</label>
+    <button id="ownerAssignmentSubmit" type="submit">Guardar Owner</button>
+  </form>
+  <p id="ownerAssignmentMessage" role="status"></p>
+</dialog>
+<script src="app.js?v=48"></script>
+<script src="reward-manager.js?v=2"></script>
+<script src="business-control.js?v=5"></script>
+<script src="visit-history.js?v=1"></script>
+<script src="admin-lifecycle.js?v=3"></script>
+<script src="owner-assignment.js?v=1"></script>
+<script src="dashboard-sections.js?v=1"></script>
 
 </body>
 </html>

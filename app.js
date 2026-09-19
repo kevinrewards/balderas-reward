@@ -7,6 +7,7 @@ const $ = id => document.getElementById(id);
 
 let businessId = null;
 let rewards = [];
+let currentProgressDesign = {};
 
 let currentBusinessRole = null;
 let currentIsSuperAdmin = false;
@@ -22,19 +23,14 @@ const esc = s =>
 
 /* CREA LAS ESTRELLAS */
 function makeStars(completed, total = 10) {
-
-  completed = Math.min(
-    Math.max(completed, 0),
-    total
-  );
-
-  return Array.from(
-    { length: total },
-    (_, i) => i < completed ? "★" : "☆"
-  ).join("");
+  return esc(window.LoyaltyProgress.render(completed, total, currentProgressDesign));
 }
 
 function loginView() {
+  window.ownerAssignment?.close();
+  window.visitHistory?.close();
+  window.rewardManager?.close();
+  if ($("editBusinessRewards")) $("editBusinessRewards").hidden = true;
   $("login").hidden = false;
   $("app").hidden = true;
 }
@@ -225,7 +221,6 @@ async function redeem(
   rewardId,
   rewardName
 ) {
-
   if (
     !confirm(
       '¿Canjear "' +
@@ -261,15 +256,8 @@ async function redeem(
 
   await load();
 }
-function getCardURL(token) {
-  return (
-    window.location.origin +
-    window.location.pathname
-      .replace(/index\.html$/, "")
-      .replace(/\/$/, "") +
-    "/card.html?token=" +
-    encodeURIComponent(token)
-  );
+function getCardURL(token, portable = false) {
+  return window.LoyaltyLinks.build("card.html", token, { portable });
 }
 
 function openCard(token) {
@@ -292,7 +280,7 @@ async function shareCard(token, customerName) {
     return;
   }
 
-  const url = getCardURL(token);
+  const url = getCardURL(token, true);
 
   const text =
     "Hola " + customerName +
@@ -347,6 +335,8 @@ async function shareCard(token, customerName) {
 /* CARGAR DATOS */
 
 async function load() {
+  window.visitHistory?.close();
+  if ($("editBusinessRewards")) $("editBusinessRewards").hidden = true;
 
   appView();
 const { data: adminCheck, error: adminCheckError } =
@@ -383,6 +373,12 @@ if (
   !membership.data ||
   !membership.data.length
 ) {
+  businessId = null;
+  currentBusinessRole = null;
+  window.visitHistory?.sync();
+  $("businessWorkspace").hidden = true;
+  $("businessSelector").hidden = true;
+  $("biz").textContent = isSuperAdmin ? "BALDERAS Admin" : "Mi negocio";
 
   $("status").textContent =
     "No encontré un negocio vinculado.";
@@ -393,6 +389,7 @@ if (
 
 const memberships =
   membership.data;
+$("businessWorkspace").hidden = false;
 
 
 // ------------------------------------
@@ -451,6 +448,8 @@ const selectedMembership =
 
 currentBusinessRole =
   selectedMembership?.role || null;
+window.dashboardSections?.sync();
+window.visitHistory?.sync();
   // Mostrar selector solamente
   // cuando haya más de un negocio.
   businessSelector.hidden =
@@ -474,7 +473,8 @@ currentBusinessRole =
     customers,
     visits,
     rewardData,
-    redemptions
+    redemptions,
+    progressDesign
   ] = await Promise.all([
 
     db
@@ -509,9 +509,13 @@ currentBusinessRole =
       .select(
         "customer_id,visits_spent"
       )
+      .eq("business_id", businessId),
+    db.from("business_branding")
+      .select("progress_emoji,empty_emoji")
       .eq("business_id", businessId)
-
+      .maybeSingle()
   ]);
+  currentProgressDesign = window.LoyaltyProgress.normalize(progressDesign.data);
 
   const error =
     business.error ||
@@ -762,6 +766,7 @@ currentBusinessRole =
 
     `).join("");
 await loadBusinessStaff();
+  await window.rewardManager?.syncPermission();
   $("status").textContent =
     "Datos sincronizados con Supabase.";
 }
@@ -1009,6 +1014,7 @@ document.addEventListener(
       );
 
     if (!card) return;
+    if (!currentIsSuperAdmin) return;
 
 
     const businessName =
@@ -1081,6 +1087,7 @@ document.addEventListener(
 
     $("businessManageModal").hidden =
       false;
+    businessControl.open();
 
   }
 );
@@ -1095,6 +1102,7 @@ if (closeBusinessManageButton) {
 
   closeBusinessManageButton.onclick =
     () => {
+      businessControl.close();
 
       $("businessManageModal").hidden =
         true;
@@ -1739,7 +1747,21 @@ message.textContent =
 // BALDERAS SUPERADMIN - OWNERS
 // ==========================================
 
-async function openOwnersAdmin() {
+let ownersListRevision = 0;
+async function readOwnerAccess(businessIds) {
+  const access = new Map();
+  await Promise.all([...new Set(businessIds)].map(async id => {
+    const { data, error } = await db.rpc("list_business_members", { target_business_id: id });
+    if (error) throw error;
+    for (const member of data || []) {
+      if (member.role === "owner") access.set(id + ":" + member.user_id, member.active);
+    }
+  }));
+  return access;
+}
+
+async function openOwnersAdmin({ reveal = true } = {}) {
+  const ticket = ++ownersListRevision;
 
   const modal =
     $("ownersAdminModal");
@@ -1751,7 +1773,7 @@ async function openOwnersAdmin() {
   if (!modal || !list) return;
 
 
-  modal.hidden = false;
+  if (reveal) modal.hidden = false;
 
   list.innerHTML =
     "<p>Cargando Owners...</p>";
@@ -1764,7 +1786,7 @@ async function openOwnersAdmin() {
     await db.rpc(
       "admin_list_owners"
     );
-
+  if (ticket !== ownersListRevision) return;
 
  if (error) {
 
@@ -1804,8 +1826,17 @@ async function openOwnersAdmin() {
   }
 
 
+  // Read the actual membership, never infer Owner access from business/account status.
+  let access;
+  try {
+    access = await readOwnerAccess(data.map(owner => owner.business_id));
+  } catch (error) {
+    if (ticket === ownersListRevision) list.innerHTML = '<p class="error">No se pudo comprobar el acceso de los Owners. Vuelve a abrir la lista.</p>';
+    return;
+  }
+  if (ticket !== ownersListRevision) return;
   list.innerHTML =
-    data.map(owner => `
+    data.map(owner => ({ ...owner, membership_active: access.get(owner.business_id + ":" + owner.user_id) })).map(owner => `
 
       <div class="businessAdminItem">
 
@@ -1825,16 +1856,6 @@ async function openOwnersAdmin() {
 
           </div>
 
-
-          <span class="businessStatus">
-
-            ${
-              owner.membership_active
-                ? "● ACTIVO"
-                : "○ INACTIVO"
-            }
-
-          </span>
 
         </div>
 
@@ -1866,6 +1887,9 @@ async function openOwnersAdmin() {
             <div class="ownerRole">
               OWNER
             </div>
+            <p class="businessStatus ${owner.membership_active === true ? 'ownerActive' : owner.membership_active === false ? 'ownerInactive' : ''}">
+              Acceso del Owner a este negocio: ${owner.membership_active === true ? '● ACTIVO' : owner.membership_active === false ? '● DESACTIVADO' : 'SIN VERIFICAR'}
+            </p>
 
           </div>
 
@@ -1924,6 +1948,37 @@ if (closeOwnersAdminButton) {
 // ==========================================
 
 let selectedOwner = null;
+
+function showOwnerMembershipStatus(active) {
+  const badge = $("ownerManageStatus");
+  badge.textContent = "Acceso del Owner a este negocio: " + (active ? "● ACTIVO" : "● DESACTIVADO");
+  badge.className = "businessStatus " + (active ? "ownerActive" : "ownerInactive");
+  $("deactivateOwner").hidden = !active;
+  $("reactivateOwner").hidden = active;
+}
+
+let ownerStatusRevision = 0;
+async function refreshOwnerMembershipStatus() {
+  const ticket = ++ownerStatusRevision;
+  const owner = selectedOwner;
+  if (!owner) return;
+  const badge = $("ownerManageStatus");
+  badge.textContent = "Consultando acceso del Owner…";
+  badge.className = "businessStatus";
+  $("deactivateOwner").hidden = true;
+  $("reactivateOwner").hidden = true;
+  try {
+    const access = await readOwnerAccess([owner.businessId]);
+    if (ticket !== ownerStatusRevision || selectedOwner !== owner || $("ownerManageModal").hidden) return;
+    const active = access.get(owner.businessId + ":" + owner.userId);
+    if (typeof active !== "boolean") throw new Error("El vínculo de Owner ya no está disponible.");
+    showOwnerMembershipStatus(active);
+  } catch (error) {
+    if (ticket !== ownerStatusRevision || selectedOwner !== owner || $("ownerManageModal").hidden) return;
+    badge.textContent = "Acceso sin verificar";
+    $("ownerManageMessage").textContent = error.message || "No se pudo consultar el acceso. Cierra y vuelve a abrir esta ventana.";
+  }
+}
 
 
 document.addEventListener(
@@ -2001,6 +2056,7 @@ document.addEventListener(
 
     $("ownerManageModal").hidden =
       false;
+    refreshOwnerMembershipStatus();
 
   }
 );
@@ -2008,12 +2064,12 @@ document.addEventListener(
 
 // CERRAR MODAL
 $("closeOwnerManage").onclick = () => {
+  ++ownerStatusRevision;
 
   $("ownerManageModal").hidden =
     true;
 
-  $("ownersAdminModal").hidden =
-    false;
+  openOwnersAdmin();
 
 };
 

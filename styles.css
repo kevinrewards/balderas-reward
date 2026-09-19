@@ -2,6 +2,31 @@
   box-sizing: border-box;
 }
 
+#rewardManagerDialog {
+  width: min(680px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: auto;
+  color: #f5f5f5;
+  background: #18181a;
+  border: 1px solid #38383c;
+  border-radius: 20px;
+  padding: 20px;
+}
+#rewardManagerDialog::backdrop { background: rgb(0 0 0 / 75%); }
+#rewardEditorForm { border-top: 1px solid #38383c; margin-top: 20px; padding-top: 16px; }
+#progressDesignForm { border-top: 1px solid #38383c; margin-top: 20px; padding-top: 16px; }
+.progressPresets, .rewardRowActions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+#progressDesignPreview { font-size: 28px; overflow-wrap: anywhere; }
+#rewardEditorForm textarea {
+  width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #38383c;
+  border-radius: 12px; color: white; background: #101011; font: inherit;
+}
+#rewardEditorForm .rewardCheckbox { display: flex; align-items: center; gap: 10px; }
+#managedRewardActive { width: auto; }
+#rewardManagerDialog .sectionhead { flex-wrap: wrap; }
+#rewardManagerDialog .businessAdminItem { overflow-wrap: anywhere; }
+#rewardManagerDialog button:disabled { opacity: .5; cursor: wait; }
+
 body {
   margin: 0;
   background: #0d0d0e;
@@ -373,6 +398,8 @@ h2 {
   font-weight: 800;
   color: #d9b45f;
 }
+.businessStatus.ownerInactive { color: #ff8585; }
+.businessStatus.ownerActive { color: #80dca0; }
 
 .businessAdminInfo {
   display: grid;
@@ -646,4 +673,44 @@ h2 {
 #addStaffForm input {
   width: 100%;
   box-sizing: border-box;
+}
+/* Business control sections */
+#ownerAssignmentDialog { width: min(600px, 92vw); max-height: 90vh; overflow: auto; background: #141416; color: inherit; }
+#ownerAssignmentDialog::backdrop { background: #000b; }
+#ownerAssignmentForm { display: grid; gap: 16px; }
+#ownerAssignmentForm label { display: grid; gap: 6px; }
+#ownerAssignmentConsent { width: auto; justify-self: start; }
+#openOwnerAssignment { margin-bottom: 16px; }
+#visitHistoryDialog { width: min(960px, 94vw); max-height: 90vh; overflow: auto; color: inherit; background: #141416; }
+#visitHistoryDialog::backdrop { background: #000b; }
+.historyFilters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.historyFilters label { display: grid; gap: 5px; flex: 1 1 150px; }
+.historyTable { overflow-x: auto; margin-top: 16px; }
+.historyTable table { width: 100%; border-collapse: collapse; }
+.historyTable th, .historyTable td { text-align: left; padding: 12px; border-bottom: 1px solid #444; overflow-wrap: anywhere; }
+.sectionToggle { background: transparent; color: inherit; border: 0; padding: 6px 0; font: inherit; text-align: left; }
+.sectionToggle span { display: inline-block; margin-left: 12px; }
+.sectionToggle[aria-expanded="false"] span { transform: rotate(-90deg); }
+.sectionToggle:disabled { opacity: 1; cursor: default; }
+.sectionToggle:disabled span { display: none; }
+.sectionToggle:focus-visible { outline: 2px solid #e1b85d; outline-offset: 4px; }
+#deleteBusiness { margin-top: 24px; }
+#businessManageModal .adminMenu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#businessManageModal .adminMenu button {
+  flex: 1 1 130px;
+}
+#businessManageModal button[aria-pressed="true"] {
+  border: 2px solid #e1b85d;
+  color: #e1b85d;
+}
+#businessControlPanel {
+  margin-top: 20px;
+  overflow-wrap: anywhere;
+}
+#businessManageMessage {
+  overflow-wrap: anywhere;
 }

@@ -4,18 +4,11 @@ const db = supabase.createClient(
 );
 
 const $ = id => document.getElementById(id);
+let currentProgressDesign = {};
 
 function makeStars(completed, total) {
 
-  completed = Math.min(
-    Math.max(completed, 0),
-    total
-  );
-
-  return Array.from(
-    { length: total },
-    (_, i) => i < completed ? "★" : "☆"
-  ).join("");
+  return window.LoyaltyProgress.render(completed, total, currentProgressDesign);
 }
 
 function escapeHTML(value) {
@@ -67,6 +60,7 @@ async function loadCard() {
   }
 
   const first = data[0];
+  currentProgressDesign = await window.LoyaltyProgress.forToken(db, token);
 
   const available =
     Number(first.available_visits || 0);
@@ -142,10 +136,10 @@ async function loadCard() {
             }
 
             <div class="rewardStars">
-              ${makeStars(
+              ${escapeHTML(makeStars(
                 completed,
                 required
-              )}
+              ))}
             </div>
 
             <div class="rewardCounter">
@@ -169,39 +163,42 @@ async function loadCard() {
       .join("");
 /* QR PERSONAL DEL CLIENTE */
 
-const checkinURL =
-  new URL(
-    "checkin.html",
-    window.location.href
-  );
-
-checkinURL.searchParams.set(
-  "token",
-  token
-);
-
-$("customerQR").innerHTML = "";
-
-new QRCode(
-  $("customerQR"),
-  {
-    text: checkinURL.href,
-    width: 190,
-    height: 190,
-    correctLevel:
-      QRCode.CorrectLevel.H
-  }
-);
+  // Show the card regardless of optional QR rendering failures.
   $("loading").hidden = true;
   $("loyaltyCard").hidden = false;
 
+  try {
+    const checkinURL = window.LoyaltyLinks.build("checkin.html", token, { portable: true });
+    $("checkinLink").href = checkinURL;
+    $("checkinLink").hidden = false;
+    $("customerQR").innerHTML = "";
+    new QRCode($("customerQR"), {
+      text: checkinURL,
+      width: 190,
+      height: 190,
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    if (window.location.protocol === "file:") {
+      $("qrMessage").textContent = "Vista previa local: el QR y el enlace abren la versión publicada.";
+      $("qrMessage").hidden = false;
+    }
+  } catch {
+    $("customerQR").innerHTML = "";
+    $("qrMessage").textContent = "No se pudo generar el QR. Usa el enlace de registro o recarga la tarjeta.";
+    $("qrMessage").hidden = false;
+  }
+
 }
 
-function showError() {
+function showError(message) {
 
   $("loading").hidden = true;
+  $("loyaltyCard").hidden = true;
+  if (message) $("error").textContent = message;
   $("error").hidden = false;
 
 }
 
-loadCard();
+loadCard().catch(() => {
+  showError("No pudimos cargar la tarjeta. Revisa tu conexión y recarga la página.");
+});
