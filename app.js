@@ -1009,6 +1009,7 @@ document.addEventListener(
       );
 
     if (!card) return;
+    if (!currentIsSuperAdmin) return;
 
 
     const businessName =
@@ -1081,6 +1082,7 @@ document.addEventListener(
 
     $("businessManageModal").hidden =
       false;
+    businessControl.open();
 
   }
 );
@@ -1095,6 +1097,7 @@ if (closeBusinessManageButton) {
 
   closeBusinessManageButton.onclick =
     () => {
+      businessControl.close();
 
       $("businessManageModal").hidden =
         true;
