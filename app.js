@@ -35,6 +35,8 @@ function makeStars(completed, total = 10) {
 }
 
 function loginView() {
+  window.rewardManager?.close();
+  if ($("editBusinessRewards")) $("editBusinessRewards").hidden = true;
   $("login").hidden = false;
   $("app").hidden = true;
 }
@@ -347,6 +349,7 @@ async function shareCard(token, customerName) {
 /* CARGAR DATOS */
 
 async function load() {
+  if ($("editBusinessRewards")) $("editBusinessRewards").hidden = true;
 
   appView();
 const { data: adminCheck, error: adminCheckError } =
@@ -762,6 +765,7 @@ currentBusinessRole =
 
     `).join("");
 await loadBusinessStaff();
+  await window.rewardManager?.syncPermission();
   $("status").textContent =
     "Datos sincronizados con Supabase.";
 }

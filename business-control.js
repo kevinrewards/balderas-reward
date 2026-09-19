@@ -75,7 +75,7 @@ const businessControl = (() => {
           item(customer.name, customer.active ? "Cliente activo" : "Cliente inactivo")
         ).join("") || empty("No hay clientes registrados.");
       } else if (tab === "rewards") {
-        panel.innerHTML = empty("Consulta de recompensas. La edición se habilitará después de verificar los permisos de Supabase.") +
+        panel.innerHTML = '<button type="button" data-control-rewards>Administrar recompensas</button>' +
           ((result.data || []).map(reward => item(reward.name,
             reward.required_visits + " visitas · " + (reward.active ? "Activa" : "Inactiva") +
             (reward.description ? " · " + reward.description : "")
@@ -103,6 +103,17 @@ const businessControl = (() => {
   }
 
   panel.addEventListener("click", async event => {
+    if (event.target.closest("[data-control-rewards]")) {
+      if (currentIsSuperAdmin && selectedBusinessManage && !$("businessManageModal").hidden) {
+        const id = selectedBusinessManage.businessId;
+        await window.rewardManager.open(id, selectedBusinessManage.businessName, async () => {
+          if (selectedBusinessManage?.businessId === id && !$("businessManageModal").hidden && activeTab === "rewards") {
+            await show("rewards");
+          }
+        });
+      }
+      return;
+    }
     if (event.target.closest("[data-control-retry]")) { await show(activeTab); return; }
     const button = event.target.closest("[data-control-member]");
     if (!button || busy || !currentIsSuperAdmin || $("businessManageModal").hidden) return;

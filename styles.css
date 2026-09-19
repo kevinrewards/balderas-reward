@@ -2,6 +2,28 @@
   box-sizing: border-box;
 }
 
+#rewardManagerDialog {
+  width: min(680px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: auto;
+  color: #f5f5f5;
+  background: #18181a;
+  border: 1px solid #38383c;
+  border-radius: 20px;
+  padding: 20px;
+}
+#rewardManagerDialog::backdrop { background: rgb(0 0 0 / 75%); }
+#rewardEditorForm { border-top: 1px solid #38383c; margin-top: 20px; padding-top: 16px; }
+#rewardEditorForm textarea {
+  width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #38383c;
+  border-radius: 12px; color: white; background: #101011; font: inherit;
+}
+#rewardEditorForm .rewardCheckbox { display: flex; align-items: center; gap: 10px; }
+#managedRewardActive { width: auto; }
+#rewardManagerDialog .sectionhead { flex-wrap: wrap; }
+#rewardManagerDialog .businessAdminItem { overflow-wrap: anywhere; }
+#rewardManagerDialog button:disabled { opacity: .5; cursor: wait; }
+
 body {
   margin: 0;
   background: #0d0d0e;
