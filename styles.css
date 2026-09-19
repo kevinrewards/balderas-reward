@@ -675,6 +675,12 @@ h2 {
   box-sizing: border-box;
 }
 /* Business control sections */
+#ownerAssignmentDialog { width: min(600px, 92vw); max-height: 90vh; overflow: auto; background: #141416; color: inherit; }
+#ownerAssignmentDialog::backdrop { background: #000b; }
+#ownerAssignmentForm { display: grid; gap: 16px; }
+#ownerAssignmentForm label { display: grid; gap: 6px; }
+#ownerAssignmentConsent { width: auto; justify-self: start; }
+#openOwnerAssignment { margin-bottom: 16px; }
 #visitHistoryDialog { width: min(960px, 94vw); max-height: 90vh; overflow: auto; color: inherit; background: #141416; }
 #visitHistoryDialog::backdrop { background: #000b; }
 .historyFilters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }

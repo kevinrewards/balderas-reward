@@ -582,6 +582,7 @@
       Propietarios registrados en BALDERAS Reward.
     </p>
 
+    <button id="openOwnerAssignment" type="button">+ Crear o asignar Owner</button>
     <div id="ownersAdminList">
       Cargando...
     </div>
@@ -833,11 +834,24 @@
   <p id="historyMessage" role="status"></p>
   <div class="staffActions"><button id="historyPrevious" type="button" class="secondary" disabled>Anterior</button><button id="historyNext" type="button" class="secondary" disabled>Siguiente</button></div>
 </dialog>
-<script src="app.js?v=47"></script>
+<dialog id="ownerAssignmentDialog" class="card" aria-labelledby="ownerAssignmentTitle">
+  <div class="sectionhead"><h2 id="ownerAssignmentTitle">Crear o asignar Owner</h2><button id="closeOwnerAssignment" type="button" class="secondary">Cerrar</button></div>
+  <form id="ownerAssignmentForm">
+    <label>Nombre del Owner<input id="ownerAssignmentName" required maxlength="150" autocomplete="name"></label>
+    <label>Correo<input id="ownerAssignmentEmail" type="email" required autocomplete="email"></label>
+    <label>Negocio existente<select id="ownerAssignmentBusiness" required></select></label>
+    <p class="muted">Si el correo ya tiene cuenta, se conserva su nombre y se agrega el acceso al negocio seleccionado. Puedes repetir el proceso para asignarle más negocios.</p>
+    <label><input id="ownerAssignmentConsent" type="checkbox" required> Confirmo el acceso de Owner activo a este negocio. Si ya es Staff aquí, pasará a Owner; si estaba desactivado como Owner, se reactivará.</label>
+    <button id="ownerAssignmentSubmit" type="submit">Guardar Owner</button>
+  </form>
+  <p id="ownerAssignmentMessage" role="status"></p>
+</dialog>
+<script src="app.js?v=48"></script>
 <script src="reward-manager.js?v=2"></script>
 <script src="business-control.js?v=5"></script>
 <script src="visit-history.js?v=1"></script>
 <script src="admin-lifecycle.js?v=3"></script>
+<script src="owner-assignment.js?v=1"></script>
 <script src="dashboard-sections.js?v=1"></script>
 
 </body>

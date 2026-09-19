@@ -27,6 +27,7 @@ function makeStars(completed, total = 10) {
 }
 
 function loginView() {
+  window.ownerAssignment?.close();
   window.visitHistory?.close();
   window.rewardManager?.close();
   if ($("editBusinessRewards")) $("editBusinessRewards").hidden = true;
