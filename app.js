@@ -255,15 +255,8 @@ async function redeem(
 
   await load();
 }
-function getCardURL(token) {
-  return (
-    window.location.origin +
-    window.location.pathname
-      .replace(/index\.html$/, "")
-      .replace(/\/$/, "") +
-    "/card.html?token=" +
-    encodeURIComponent(token)
-  );
+function getCardURL(token, portable = false) {
+  return window.LoyaltyLinks.build("card.html", token, { portable });
 }
 
 function openCard(token) {
@@ -286,7 +279,7 @@ async function shareCard(token, customerName) {
     return;
   }
 
-  const url = getCardURL(token);
+  const url = getCardURL(token, true);
 
   const text =
     "Hola " + customerName +
