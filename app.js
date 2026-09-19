@@ -985,6 +985,127 @@ if (closeBusinessAdminButton) {
 
 }
 // ==========================================
+// ADMINISTRAR NEGOCIO SELECCIONADO
+// ==========================================
+
+let selectedBusinessManage = null;
+
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const button =
+      event.target.closest(
+        ".businessManageButton"
+      );
+
+    if (!button) return;
+
+
+    const card =
+      button.closest(
+        ".businessAdminItem"
+      );
+
+    if (!card) return;
+
+
+    const businessName =
+      card
+        .querySelector(
+          ".businessAdminTop strong"
+        )
+        ?.textContent
+        ?.trim()
+      || "Negocio";
+
+
+    const businessSlug =
+      card
+        .querySelector(
+          ".businessAdminTop .muted"
+        )
+        ?.textContent
+        ?.trim()
+      || "";
+
+
+    selectedBusinessManage = {
+
+      businessId:
+        button.dataset.businessId,
+
+      businessName:
+        businessName,
+
+      businessSlug:
+        businessSlug
+
+    };
+
+
+    $("businessManageTitle").textContent =
+      "Administrar " +
+      businessName;
+
+
+    $("businessManageSummary").innerHTML = `
+
+      <div class="businessAdminItem">
+
+        <strong>
+          ${escapeHtml(
+            businessName
+          )}
+        </strong>
+
+        <div class="muted">
+          ${escapeHtml(
+            businessSlug
+          )}
+        </div>
+
+      </div>
+
+    `;
+
+
+    $("businessManageMessage").textContent =
+      "";
+
+
+    $("businessAdminModal").hidden =
+      true;
+
+
+    $("businessManageModal").hidden =
+      false;
+
+  }
+);
+
+
+// CERRAR ADMINISTRAR NEGOCIO
+
+const closeBusinessManageButton =
+  $("closeBusinessManage");
+
+if (closeBusinessManageButton) {
+
+  closeBusinessManageButton.onclick =
+    () => {
+
+      $("businessManageModal").hidden =
+        true;
+
+      $("businessAdminModal").hidden =
+        false;
+
+    };
+
+}
+// ==========================================
 // BALDERAS SUPERADMIN - NUEVO NEGOCIO
 // VISTA PREVIA EN VIVO
 // ==========================================
