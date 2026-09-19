@@ -63,7 +63,7 @@ window.adminLifecycle = (() => {
       if (action === "delete_business") { businessControl.close(); $("businessManageModal").hidden = true; }
       if (action === "remove_owner") $("ownerManageModal").hidden = true;
       if (["deactivate", "reactivate"].includes(action) && selectedOwner?.businessId === business.businessId && selectedOwner?.userId === userId) {
-        showOwnerMembershipStatus(action === "reactivate");
+        await refreshOwnerMembershipStatus();
       }
       await load();
       // load() refreshes the business dashboard, not the separate Owners list.

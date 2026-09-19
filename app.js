@@ -1746,7 +1746,21 @@ message.textContent =
 // BALDERAS SUPERADMIN - OWNERS
 // ==========================================
 
+let ownersListRevision = 0;
+async function readOwnerAccess(businessIds) {
+  const access = new Map();
+  await Promise.all([...new Set(businessIds)].map(async id => {
+    const { data, error } = await db.rpc("list_business_members", { target_business_id: id });
+    if (error) throw error;
+    for (const member of data || []) {
+      if (member.role === "owner") access.set(id + ":" + member.user_id, member.active);
+    }
+  }));
+  return access;
+}
+
 async function openOwnersAdmin({ reveal = true } = {}) {
+  const ticket = ++ownersListRevision;
 
   const modal =
     $("ownersAdminModal");
@@ -1771,7 +1785,7 @@ async function openOwnersAdmin({ reveal = true } = {}) {
     await db.rpc(
       "admin_list_owners"
     );
-
+  if (ticket !== ownersListRevision) return;
 
  if (error) {
 
@@ -1811,8 +1825,17 @@ async function openOwnersAdmin({ reveal = true } = {}) {
   }
 
 
+  // Read the actual membership, never infer Owner access from business/account status.
+  let access;
+  try {
+    access = await readOwnerAccess(data.map(owner => owner.business_id));
+  } catch (error) {
+    if (ticket === ownersListRevision) list.innerHTML = '<p class="error">No se pudo comprobar el acceso de los Owners. Vuelve a abrir la lista.</p>';
+    return;
+  }
+  if (ticket !== ownersListRevision) return;
   list.innerHTML =
-    data.map(owner => `
+    data.map(owner => ({ ...owner, membership_active: access.get(owner.business_id + ":" + owner.user_id) })).map(owner => `
 
       <div class="businessAdminItem">
 
@@ -1832,16 +1855,6 @@ async function openOwnersAdmin({ reveal = true } = {}) {
 
           </div>
 
-
-          <span class="businessStatus ${owner.membership_active === true ? 'ownerActive' : 'ownerInactive'}">
-
-            ${
-              owner.membership_active === true
-                ? "● ACTIVO"
-                : "● DESACTIVADO"
-            }
-
-          </span>
 
         </div>
 
@@ -1873,6 +1886,9 @@ async function openOwnersAdmin({ reveal = true } = {}) {
             <div class="ownerRole">
               OWNER
             </div>
+            <p class="businessStatus ${owner.membership_active === true ? 'ownerActive' : owner.membership_active === false ? 'ownerInactive' : ''}">
+              Acceso del Owner a este negocio: ${owner.membership_active === true ? '● ACTIVO' : owner.membership_active === false ? '● DESACTIVADO' : 'SIN VERIFICAR'}
+            </p>
 
           </div>
 
@@ -1882,7 +1898,6 @@ async function openOwnersAdmin({ reveal = true } = {}) {
         <button
           type="button"
           class="secondary ownerManageButton"
-          data-owner-active="${owner.membership_active === true}"
           data-business-id="${owner.business_id}"
           data-user-id="${owner.user_id}">
           Administrar
@@ -1935,10 +1950,33 @@ let selectedOwner = null;
 
 function showOwnerMembershipStatus(active) {
   const badge = $("ownerManageStatus");
-  badge.textContent = active ? "● ACTIVO" : "● DESACTIVADO";
+  badge.textContent = "Acceso del Owner a este negocio: " + (active ? "● ACTIVO" : "● DESACTIVADO");
   badge.className = "businessStatus " + (active ? "ownerActive" : "ownerInactive");
   $("deactivateOwner").hidden = !active;
   $("reactivateOwner").hidden = active;
+}
+
+let ownerStatusRevision = 0;
+async function refreshOwnerMembershipStatus() {
+  const ticket = ++ownerStatusRevision;
+  const owner = selectedOwner;
+  if (!owner) return;
+  const badge = $("ownerManageStatus");
+  badge.textContent = "Consultando acceso del Owner…";
+  badge.className = "businessStatus";
+  $("deactivateOwner").hidden = true;
+  $("reactivateOwner").hidden = true;
+  try {
+    const access = await readOwnerAccess([owner.businessId]);
+    if (ticket !== ownerStatusRevision || selectedOwner !== owner || $("ownerManageModal").hidden) return;
+    const active = access.get(owner.businessId + ":" + owner.userId);
+    if (typeof active !== "boolean") throw new Error("El vínculo de Owner ya no está disponible.");
+    showOwnerMembershipStatus(active);
+  } catch (error) {
+    if (ticket !== ownerStatusRevision || selectedOwner !== owner || $("ownerManageModal").hidden) return;
+    badge.textContent = "Acceso sin verificar";
+    $("ownerManageMessage").textContent = error.message || "No se pudo consultar el acceso. Cierra y vuelve a abrir esta ventana.";
+  }
 }
 
 
@@ -2006,7 +2044,6 @@ document.addEventListener(
 
     $("ownerManageBusiness").textContent =
       selectedOwner.businessName;
-    showOwnerMembershipStatus(button.dataset.ownerActive === "true");
 
 
     $("ownerManageMessage").textContent =
@@ -2018,6 +2055,7 @@ document.addEventListener(
 
     $("ownerManageModal").hidden =
       false;
+    refreshOwnerMembershipStatus();
 
   }
 );
@@ -2025,6 +2063,7 @@ document.addEventListener(
 
 // CERRAR MODAL
 $("closeOwnerManage").onclick = () => {
+  ++ownerStatusRevision;
 
   $("ownerManageModal").hidden =
     true;
