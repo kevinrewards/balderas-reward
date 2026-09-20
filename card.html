@@ -4,10 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0d0d0e">
+  <meta name="referrer" content="no-referrer">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 
   <title>Mi tarjeta | BALDERAS Reward</title>
 
-  <link rel="stylesheet" href="card.css?v=1">
+  <link rel="stylesheet" href="card.css?v=2">
 </head>
 
 <body>
@@ -25,22 +28,23 @@
   <section id="loyaltyCard" hidden>
 
     <div class="brand">
-      <div class="logoBox">
+      <div class="logoBox" hidden>
         <img
           id="businessLogo"
-          src="lg-estudio.jpg"
-          alt="Logo LG ESTUDIO"
+          alt="Logotipo del negocio"
+          referrerpolicy="no-referrer"
         >
       </div>
 
       <div id="businessName" class="businessName">
-        LG ESTUDIO
+        Mi negocio
       </div>
 
-      <div class="loyaltyLabel">
+      <div id="cardProgramName" class="loyaltyLabel">
         TARJETA DE LEALTAD
       </div>
     </div>
+    <p id="cardWelcomeText"></p>
 
     <section class="customerCard">
 
@@ -86,7 +90,7 @@
   </div>
 
   <p class="qrText">
-    Presenta este código al personal de LG ESTUDIO
+    Presenta este código al personal del negocio
     para registrar tu visita.
   </p>
 
@@ -102,6 +106,14 @@
   </div>
 
 </section>
+    <section id="cardExperience" hidden>
+      <h2>Tu tarjeta a la mano</h2>
+      <button id="cardInstall" type="button" hidden>Instalar tarjeta</button>
+      <button id="cardWallet" type="button" hidden>Agregar a Google Wallet</button>
+      <button id="cardPush" type="button" hidden>Recibir promociones y novedades</button>
+      <p id="cardExperienceMessage" role="status"></p>
+      <div id="cardCampaigns"></div>
+    </section>
     <footer>
       <span>Powered by</span>
       <strong>
@@ -119,7 +131,8 @@
 
 <script src="progress-design.js?v=1"></script>
 <script src="card-links.js?v=1"></script>
-<script src="card.js?v=4"></script>
+<script src="card.js?v=5"></script>
+<script src="card-experience.js?v=1"></script>
 
 </body>
 </html>

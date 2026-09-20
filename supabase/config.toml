@@ -1,0 +1,4 @@
+# This endpoint serves public card-token actions and verifies getUser + business
+# permissions itself for management. A publishable key is not a user identity.
+[functions.loyalty-v2]
+verify_jwt = false
