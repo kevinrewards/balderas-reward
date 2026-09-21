@@ -27,6 +27,7 @@ function makeStars(completed, total = 10) {
 }
 
 function loginView() {
+  window.customerExperience?.close(true);
   window.ownerAssignment?.close();
   window.visitHistory?.close();
   window.rewardManager?.close();
@@ -767,6 +768,7 @@ window.visitHistory?.sync();
     `).join("");
 await loadBusinessStaff();
   await window.rewardManager?.syncPermission();
+  window.customerExperience?.sync();
   $("status").textContent =
     "Datos sincronizados con Supabase.";
 }
