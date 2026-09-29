@@ -20,7 +20,12 @@ async function card(token:string){
  if(b.error||!b.data)throw new Error('Negocio no disponible.');
  const d=await service.from('card_presentation').select('*').eq('business_id',b.data.id).maybeSingle();
  if(d.error)throw new Error('No se pudo consultar el diseño.');
- return {customer:c.data,business:b.data,design:d.data};
+ const branding=await service.from('business_branding').select('logo_path').eq('business_id',b.data.id).maybeSingle();
+ if(branding.error)throw new Error('No se pudo consultar el logotipo del negocio.');
+ const logoPath=branding.data?.logo_path;
+ const businessLogo=logoPath?service.storage.from('business-assets').getPublicUrl(logoPath).data.publicUrl:'';
+ const logoUrl=businessLogo||d.data?.logo_url||new URL('icons/icon-512.png',base).href;
+ return {customer:c.data,business:b.data,design:{...d.data,logo_url:logoUrl}};
 }
 
 async function googleAuth(){
@@ -42,7 +47,7 @@ async function googleSave(context:any){
   const current=await fetch(`${root}/${id}`,{headers});
   if(current.status!==404&&!current.ok)throw new Error('No se pudo consultar el pase en Google Wallet.');
   const data:Record<string,unknown>={...body};
-  if(current.ok&&resource==='loyaltyClass')delete data.reviewStatus;
+  if(resource==='loyaltyClass')data.reviewStatus='UNDER_REVIEW';
   const saved=await fetch(current.status===404?root:`${root}/${id}`,{method:current.status===404?'POST':'PATCH',headers,body:JSON.stringify(data)});
   if(!saved.ok&&saved.status!==409)throw new Error('Google Wallet rechazó el pase. Revisa la cuenta de emisor y su aprobación.');
  }
@@ -118,7 +123,7 @@ Deno.serve(async(request:Request)=>{
   if(action==='config'){
    let subscribed=false;
    if(body.endpoint){const s=await service.from('card_push_subscriptions').select('id').eq('customer_id',context.customer.id).eq('endpoint',body.endpoint).maybeSingle();if(s.error)throw s.error;subscribed=!!s.data;}
-   return reply(200,{push_ready:pushReady(),wallet_ready:walletReady(),vapid_public_key:env('VAPID_PUBLIC_KEY'),subscribed});
+   return reply(200,{push_ready:pushReady(),wallet_ready:walletReady(),vapid_public_key:env('VAPID_PUBLIC_KEY'),subscribed,logo_url:context.design.logo_url});
   }
   if(action==='manifest'){
    const start=new URL('card.html',base);start.searchParams.set('token',body.token);
