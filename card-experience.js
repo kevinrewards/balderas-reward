@@ -24,6 +24,11 @@ window.cardExperience=(()=>{
   if(location.protocol!=='https:'&&!['localhost','127.0.0.1'].includes(location.hostname)){msg('Para instalar la tarjeta y activar notificaciones, abre su enlace HTTPS.');return;}
   try{
    config=await api('config');
+   if(config.logo_url?.startsWith('https://')){
+    $('businessLogo').src=config.logo_url;
+    $('businessLogo').alt=design?.program_name||'Logotipo del negocio';
+    $('businessLogo').parentElement.hidden=false;
+   }
    const manifest=document.createElement('link');manifest.rel='manifest';manifest.href=endpoint+'?action=manifest&token='+encodeURIComponent(token);document.head.appendChild(manifest);
    $('cardWallet').hidden=!config.wallet_ready;
    $('cardWallet').textContent=/Android/i.test(navigator.userAgent)?'Agregar a Google Wallet':'Google Wallet (para Android)';
