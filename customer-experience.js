@@ -16,21 +16,27 @@ window.customerExperience = (() => {
     <label>Vigente hasta (hora del dispositivo)<input name="expires_at" type="datetime-local" required></label><button type="submit">Guardar borrador</button></form></details>
    <div id="experienceCampaigns"></div><p id="experienceMessage" role="status"></p>`;
   dialog.setAttribute('aria-labelledby','experienceTitle');document.body.appendChild(dialog);
-  let id=null,revision=0,busy=false;
+  let id=null,revision=0,busy=false,expiryTimer=null;
   const message=()=>document.getElementById('experienceMessage');
   const design=()=>document.getElementById('experienceDesign');
   async function permission(bid){const r=await db.rpc('can_manage_business_settings',{target_business_id:bid});if(r.error||r.data!==true)throw new Error('Solo Owner de este negocio o Superadmin.');}
-  function close(force=false){if(busy&&!force)return;++revision;id=null;dialog.close();}
+  function close(force=false){if(busy&&!force)return;++revision;id=null;clearTimeout(expiryTimer);expiryTimer=null;dialog.close();}
   function sync(){ $('openCustomerExperience').hidden=!businessId||!(currentIsSuperAdmin||currentBusinessRole==='owner'); }
   function preview(){const f=design().elements,p=$('experiencePreview');p.style.background=f.background_color.value;p.style.color=f.primary_color.value;p.textContent=f.program_name.value+' · '+f.welcome_text.value;}
   async function campaigns(){
     const ticket=revision,bid=id;
-    const r=await db.from('business_campaigns').select('id,title,body,kind,status,expires_at').eq('business_id',bid).order('created_at',{ascending:false}).limit(100);
+    const r=await db.from('business_campaigns').select('id,title,body,kind,status,expires_at').eq('business_id',bid).in('status',['draft','published']).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(100);
     if(ticket!==revision)return;if(r.error)throw r.error;
-    $('experienceCampaigns').innerHTML=(r.data||[]).map(c=>`<article class="businessAdminItem"><strong>${escapeHtml(c.title)}</strong><p>${escapeHtml(c.body)}</p><p>${{draft:'Borrador',published:'Publicada',archived:'Archivada'}[c.status]} · Hasta ${escapeHtml(new Date(c.expires_at).toLocaleString())}</p>
+    renderCampaigns(r.data||[]);
+  }
+  function renderCampaigns(rows){
+    clearTimeout(expiryTimer);expiryTimer=null;
+    const visible=rows.filter(c=>['draft','published'].includes(c.status)&&Date.parse(c.expires_at)>Date.now());
+    $('experienceCampaigns').innerHTML=visible.map(c=>`<article class="businessAdminItem"><strong>${escapeHtml(c.title)}</strong><p>${escapeHtml(c.body)}</p><p>${{draft:'Borrador',published:'Publicada',archived:'Archivada'}[c.status]} · Hasta ${escapeHtml(new Date(c.expires_at).toLocaleString())}</p>
       ${c.status==='draft'?`<button data-campaign="${c.id}" data-action="publish">Publicar en las tarjetas</button>`:''}
       ${c.status==='published'?`<button data-campaign="${c.id}" data-action="send">Notificar a tarjetas instaladas / continuar envío</button><button class="secondary" data-campaign="${c.id}" data-action="send_wallet">Notificar por Google Wallet</button>`:''}
-      ${c.status!=='archived'?`<button class="secondary" data-campaign="${c.id}" data-action="archive">Archivar</button>`:''}</article>`).join('')||'<p>No hay promociones o novedades.</p>';
+      ${c.status!=='archived'?`<button class="secondary" data-campaign="${c.id}" data-action="archive">Archivar</button>`:''}</article>`).join('')||'<p>No hay promociones o novedades vigentes.</p>';
+    if(visible.length)expiryTimer=setTimeout(()=>renderCampaigns(rows),Math.min(2147483647,Math.max(1,Math.min(...visible.map(c=>Date.parse(c.expires_at)))-Date.now()+1)));
   }
   async function open(bid,name){
     if(busy)return;close();const ticket=revision;id=bid;$('experienceTitle').textContent='Tarjeta y promociones · '+name;design().reset();$('experienceCampaigns').innerHTML='';dialog.showModal();message().textContent='Cargando…';
