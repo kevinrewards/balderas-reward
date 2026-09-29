@@ -98,7 +98,7 @@ if (forgotPasswordButton) {
           email,
           {
             redirectTo:
-              "https://kevinrewards.github.io/balderas-reward/accept-invite.html"
+              new URL("accept-invite.html", window.location.protocol === "file:" ? "https://balderas-reward.netlify.app/" : window.location.href).href
           }
         );
 
