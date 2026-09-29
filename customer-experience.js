@@ -14,7 +14,7 @@ window.customerExperience = (() => {
     <label>Tipo<select name="kind"><option value="promotion">Promoción</option><option value="news">Novedad</option></select></label>
     <label>Título<input name="title" maxlength="80" required></label><label>Mensaje<textarea name="body" maxlength="500" required></textarea></label>
     <label>Vigente hasta (hora del dispositivo)<input name="expires_at" type="datetime-local" required></label><button type="submit">Guardar borrador</button></form></details>
-   <div id="experienceCampaigns"></div><p id="experienceMessage" role="status"></p>`;
+   <label><input id="experienceShowOld" type="checkbox"> Mostrar archivadas y vencidas para eliminarlas</label><div id="experienceCampaigns"></div><p id="experienceMessage" role="status"></p>`;
   dialog.setAttribute('aria-labelledby','experienceTitle');document.body.appendChild(dialog);
   let id=null,revision=0,busy=false,expiryTimer=null;
   const message=()=>document.getElementById('experienceMessage');
@@ -25,18 +25,20 @@ window.customerExperience = (() => {
   function preview(){const f=design().elements,p=$('experiencePreview');p.style.background=f.background_color.value;p.style.color=f.primary_color.value;p.textContent=f.program_name.value+' · '+f.welcome_text.value;}
   async function campaigns(){
     const ticket=revision,bid=id;
-    const r=await db.from('business_campaigns').select('id,title,body,kind,status,expires_at').eq('business_id',bid).in('status',['draft','published']).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(100);
+    let query=db.from('business_campaigns').select('id,title,body,kind,status,expires_at').eq('business_id',bid);
+    if(!$('experienceShowOld').checked)query=query.in('status',['draft','published']).gt('expires_at',new Date().toISOString());
+    const r=await query.order('created_at',{ascending:false}).limit(100);
     if(ticket!==revision)return;if(r.error)throw r.error;
     renderCampaigns(r.data||[]);
   }
   function renderCampaigns(rows){
     clearTimeout(expiryTimer);expiryTimer=null;
-    const visible=rows.filter(c=>['draft','published'].includes(c.status)&&Date.parse(c.expires_at)>Date.now());
+    const visible=rows.filter(c=>$('experienceShowOld').checked||(['draft','published'].includes(c.status)&&Date.parse(c.expires_at)>Date.now()));
     $('experienceCampaigns').innerHTML=visible.map(c=>`<article class="businessAdminItem"><strong>${escapeHtml(c.title)}</strong><p>${escapeHtml(c.body)}</p><p>${{draft:'Borrador',published:'Publicada',archived:'Archivada'}[c.status]} · Hasta ${escapeHtml(new Date(c.expires_at).toLocaleString())}</p>
-      ${c.status==='draft'?`<button data-campaign="${c.id}" data-action="publish">Publicar en las tarjetas</button>`:''}
-      ${c.status==='published'?`<button data-campaign="${c.id}" data-action="send">Notificar a tarjetas instaladas / continuar envío</button><button class="secondary" data-campaign="${c.id}" data-action="send_wallet">Notificar por Google Wallet</button>`:''}
-      ${c.status!=='archived'?`<button class="secondary" data-campaign="${c.id}" data-action="archive">Archivar</button>`:''}</article>`).join('')||'<p>No hay promociones o novedades vigentes.</p>';
-    if(visible.length)expiryTimer=setTimeout(()=>renderCampaigns(rows),Math.min(2147483647,Math.max(1,Math.min(...visible.map(c=>Date.parse(c.expires_at)))-Date.now()+1)));
+      ${c.status==='draft'&&Date.parse(c.expires_at)>Date.now()?`<button data-campaign="${c.id}" data-action="publish">Publicar en las tarjetas</button>`:''}
+      ${c.status==='published'&&Date.parse(c.expires_at)>Date.now()?`<button data-campaign="${c.id}" data-action="send">Notificar a tarjetas instaladas / continuar envío</button><button class="secondary" data-campaign="${c.id}" data-action="send_wallet">Notificar por Google Wallet</button>`:''}
+      ${c.status!=='archived'?`<button class="secondary" data-campaign="${c.id}" data-action="archive">Archivar</button>`:''}<button class="secondary" data-campaign="${c.id}" data-action="delete">Eliminar definitivamente</button></article>`).join('')||'<p>No hay promociones o novedades vigentes.</p>';
+    if(visible.length&&!$('experienceShowOld').checked)expiryTimer=setTimeout(()=>renderCampaigns(rows),Math.min(2147483647,Math.max(1,Math.min(...visible.map(c=>Date.parse(c.expires_at)))-Date.now()+1)));
   }
   async function open(bid,name){
     if(busy)return;close();const ticket=revision;id=bid;$('experienceTitle').textContent='Tarjeta y promociones · '+name;design().reset();$('experienceCampaigns').innerHTML='';dialog.showModal();message().textContent='Cargando…';
@@ -53,12 +55,17 @@ window.customerExperience = (() => {
   async function run(task){if(busy||!id)return;const ticket=revision,bid=id;busy=true;message().textContent='Guardando…';try{await permission(bid);if(ticket!==revision||!dialog.open)return;await task();if(ticket===revision)message().textContent=message().textContent==='Guardando…'?'Cambio guardado.':message().textContent;}catch(error){if(ticket===revision)message().textContent=error.message;}finally{busy=false;}}
   async function edge(body){const r=await db.functions.invoke('loyalty-v2',{body});if(r.error){let detail;try{detail=await r.error.context?.json();}catch{}throw new Error(detail?.error||'No se pudo completar la operación de notificaciones.');}if(r.data?.error)throw new Error(r.data.error);return r.data;}
   $('experienceClose').onclick=()=>close();dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+  $('experienceShowOld').onchange=()=>{if(id)campaigns().catch(error=>{message().textContent=error.message;});};
   design().oninput=preview;
   design().onsubmit=e=>{e.preventDefault();const values=Object.fromEntries(new FormData(design()));run(async()=>{if(values.logo_url&&!String(values.logo_url).startsWith('https://'))throw new Error('El logotipo debe tener un enlace HTTPS.');const r=await db.rpc('save_card_presentation',{target_business_id:id,design:values});if(r.error)throw r.error;});};
   $('experienceCampaign').onsubmit=e=>{e.preventDefault();const content=Object.fromEntries(new FormData(e.target));run(async()=>{content.expires_at=new Date(content.expires_at).toISOString();const r=await db.rpc('manage_business_campaign',{target_business_id:id,action:'create',content});if(r.error)throw r.error;e.target.reset();await campaigns();});};
   $('experienceCampaigns').onclick=e=>{const b=e.target.closest('[data-campaign]');if(!b)return;const action=b.dataset.action,campaign_id=b.dataset.campaign;
     run(async()=>{
-      if(action==='send_wallet'){
+      if(action==='delete'){
+        if(!confirm('¿Eliminar definitivamente esta promoción y sus registros de envío? No se puede deshacer. Las notificaciones ya recibidas no se retiran.')){message().textContent='Eliminación cancelada.';return;}
+        const result=await db.rpc('delete_business_campaign',{target_business_id:id,target_campaign_id:campaign_id});
+        if(result.error)throw result.error;await campaigns();message().textContent='Promoción eliminada definitivamente.';
+      }else if(action==='send_wallet'){
         const info=await edge({action:'preview',campaign_id});if(!info.wallet_ready)throw new Error('Google Wallet aún no está configurado.');
         if(!confirm('¿Enviar esta promoción por Google Wallet a quienes guardaron un pase de este negocio? Google limita las alertas y cada cliente debe permitirlas.')){message().textContent='Envío cancelado.';return;}
         const result=await edge({action:'send_wallet',campaign_id,confirm:true});message().textContent=result.message;
