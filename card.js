@@ -166,6 +166,8 @@ async function loadCard() {
   // Show the card regardless of optional QR rendering failures.
   $("loading").hidden = true;
   $("loyaltyCard").hidden = false;
+  // Optional V2 enhancements must never block the usable card or its QR.
+  window.cardExperience?.init().catch(() => {});
 
   try {
     const checkinURL = window.LoyaltyLinks.build("checkin.html", token, { portable: true });

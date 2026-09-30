@@ -27,6 +27,7 @@ function makeStars(completed, total = 10) {
 }
 
 function loginView() {
+  window.customerExperience?.close(true);
   window.ownerAssignment?.close();
   window.visitHistory?.close();
   window.rewardManager?.close();
@@ -97,7 +98,7 @@ if (forgotPasswordButton) {
           email,
           {
             redirectTo:
-              "https://kevinrewards.github.io/balderas-reward/accept-invite.html"
+              new URL("accept-invite.html", window.location.protocol === "file:" ? "https://balderas-reward.netlify.app/" : window.location.href).href
           }
         );
 
@@ -767,6 +768,7 @@ window.visitHistory?.sync();
     `).join("");
 await loadBusinessStaff();
   await window.rewardManager?.syncPermission();
+  window.customerExperience?.sync();
   $("status").textContent =
     "Datos sincronizados con Supabase.";
 }
@@ -1651,8 +1653,7 @@ if (ownerFunctionError) {
   );
 
   throw new Error(
-  ownerFunctionError.message ||
-  "No se pudo contactar al servidor para crear el Owner"
+  await invitationErrorMessage(ownerFunctionError, "No se pudo contactar al servidor para crear el Owner")
 );
 }
 
@@ -2632,8 +2633,7 @@ if (!canCreateStaff) {
       console.error(error);
 
       message.textContent =
-        error.message ||
-        "No se pudo crear el empleado.";
+        await invitationErrorMessage(error, "No se pudo crear el empleado.");
 
       return;
 
@@ -2692,3 +2692,15 @@ if (!canCreateStaff) {
   }
 
 })();
+
+// Mostrar los rechazos de la función sin perder el detalle devuelto por el servidor.
+async function invitationErrorMessage(error, fallback) {
+  try {
+    const response = error?.context;
+    if (response && typeof response.clone === "function") {
+      const body = await response.clone().json();
+      if (typeof body?.error === "string" && body.error.trim()) return body.error;
+    }
+  } catch (_) { /* La respuesta puede no contener JSON. */ }
+  return error?.message || fallback;
+}

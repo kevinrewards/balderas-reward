@@ -1,0 +1,48 @@
+// Run with PGLITE_MODULE=/absolute/path/to/@electric-sql/pglite/dist/index.js
+// Uses a real PostgreSQL engine in WASM; no live Supabase data or messages.
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const {PGlite}=await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const ids={a:'00000000-0000-0000-0000-000000000001',b:'00000000-0000-0000-0000-000000000002',owner:'00000000-0000-0000-0000-000000000011',staff:'00000000-0000-0000-0000-000000000012',admin:'00000000-0000-0000-0000-000000000013',customer:'00000000-0000-0000-0000-000000000021',token:'00000000-0000-0000-0000-000000000031',sub:'00000000-0000-0000-0000-000000000041'};
+test('Database enforces business scope, Staff exclusion, public token scope and push claims',async()=>{
+ const db=new PGlite();
+ await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
+ CREATE SCHEMA auth; CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+ GRANT USAGE ON SCHEMA auth,public TO anon,authenticated,service_role; GRANT EXECUTE ON FUNCTION auth.uid() TO anon,authenticated,service_role;
+ CREATE TABLE businesses(id uuid PRIMARY KEY,active boolean); CREATE TABLE business_members(business_id uuid,user_id uuid,role text,active boolean);
+ CREATE TABLE platform_admins(user_id uuid); CREATE TABLE customers(id uuid PRIMARY KEY,business_id uuid,qr_token uuid,active boolean);
+ CREATE TABLE visits(id uuid DEFAULT gen_random_uuid(),business_id uuid); CREATE TABLE redemptions(id uuid DEFAULT gen_random_uuid(),business_id uuid);
+ CREATE FUNCTION can_manage_business_settings(bid uuid) RETURNS boolean LANGUAGE sql SECURITY DEFINER AS $$ SELECT EXISTS(SELECT 1 FROM platform_admins WHERE user_id=auth.uid()) OR EXISTS(SELECT 1 FROM business_members WHERE business_id=bid AND user_id=auth.uid() AND role='owner' AND active) $$;
+ INSERT INTO businesses VALUES('${ids.a}',true),('${ids.b}',true);
+ INSERT INTO business_members VALUES('${ids.a}','${ids.owner}','owner',true),('${ids.b}','${ids.owner}','staff',true),('${ids.a}','${ids.staff}','staff',true);
+ INSERT INTO platform_admins VALUES('${ids.admin}'); INSERT INTO customers VALUES('${ids.customer}','${ids.a}','${ids.token}',true);`);
+ await db.exec(await readFile(new URL('../supabase/migrations/20260925_customer_experience.sql',import.meta.url),'utf8'));
+ const as=async(user,role='authenticated')=>{await db.exec('RESET ROLE');await db.query("SELECT set_config('request.jwt.claim.sub',$1,false)",[user||'']);await db.exec('SET ROLE '+role);};
+ const design={program_name:'Prueba',primary_color:'#ffffff',background_color:'#111112'};
+ await as(ids.staff);await assert.rejects(db.query('SELECT save_card_presentation($1,$2)',[ids.a,design]),/Solo Owner/);
+ await assert.rejects(db.query('SELECT manage_business_campaign($1,$2)',[ids.a,'create']),/Solo Owner/);
+ await as(ids.owner);await db.query('SELECT save_card_presentation($1,$2)',[ids.a,design]);
+ await assert.rejects(db.query('SELECT save_card_presentation($1,$2)',[ids.b,design]),/Solo Owner/);
+ await assert.rejects(db.query("INSERT INTO business_campaigns(business_id,title,body,kind,expires_at) VALUES($1,'x','x','news',now()+interval '1 day')",[ids.a]),/permission denied/);
+ const campaign=(await db.query('SELECT manage_business_campaign($1,$2,NULL,$3) AS id',[ids.a,'create',{title:'Oferta',body:'Solo negocio A',kind:'promotion',expires_at:'2099-01-01T00:00:00Z'}])).rows[0].id;
+ await as(null,'anon');let data=(await db.query('SELECT get_card_experience($1) AS data',[ids.token])).rows[0].data;assert.equal(data.campaigns.length,0);
+ assert.equal((await db.query('SELECT get_card_experience($1) AS data',[ids.b])).rows[0].data,null);
+ await as(ids.owner);await db.query('SELECT manage_business_campaign($1,$2,$3)',[ids.a,'publish',campaign]);
+ await as(null,'anon');data=(await db.query('SELECT get_card_experience($1) AS data',[ids.token])).rows[0].data;assert.equal(data.campaigns.length,1);
+ await assert.rejects(db.query('SELECT * FROM card_push_subscriptions'),/permission denied/);
+ await as(ids.staff);await assert.rejects(db.query('SELECT claim_campaign_push($1,$2)',[campaign,ids.admin]),/permission denied/);
+ await as(ids.admin);await db.query('SELECT save_card_presentation($1,$2)',[ids.b,design]);
+ await db.exec('RESET ROLE');await db.query('INSERT INTO card_push_subscriptions(id,customer_id,business_id,endpoint,p256dh,auth) VALUES($1,$2,$3,$4,$5,$6)',[ids.sub,ids.customer,ids.a,'https://fcm.googleapis.com/test','key','auth']);
+ await db.exec('SET ROLE service_role');await assert.rejects(db.query('SELECT claim_campaign_push($1,$2)',[campaign,ids.staff]),/No autorizado/);
+ let batch=(await db.query('SELECT claim_campaign_push($1,$2) AS data',[campaign,ids.owner])).rows[0].data;assert.equal(batch.subscriptions.length,1);
+ batch=(await db.query('SELECT claim_campaign_push($1,$2) AS data',[campaign,ids.owner])).rows[0].data;assert.equal(batch.subscriptions.length,0);
+ await assert.rejects(db.query('SELECT claim_wallet_campaign($1,$2)',[campaign,ids.staff]),/No autorizado/);
+ let wallet=(await db.query('SELECT claim_wallet_campaign($1,$2) AS data',[campaign,ids.owner])).rows[0].data;assert.equal(wallet.claimed,true);
+ wallet=(await db.query('SELECT claim_wallet_campaign($1,$2) AS data',[campaign,ids.owner])).rows[0].data;assert.equal(wallet.claimed,false);
+ await db.exec('RESET ROLE');await db.query('UPDATE businesses SET active=false WHERE id=$1',[ids.a]);
+ await assert.rejects(db.query('INSERT INTO visits(business_id) VALUES($1)',[ids.a]),/desactivado/);
+ await as(null,'anon');assert.equal((await db.query('SELECT get_card_experience($1) AS data',[ids.token])).rows[0].data,null);
+ await as(ids.owner);await assert.rejects(db.query('SELECT manage_business_campaign($1,$2,$3)',[ids.a,'publish',campaign]),/desactivado/);
+ await db.close();
+});

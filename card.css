@@ -1,6 +1,11 @@
 * {
   box-sizing: border-box;
 }
+:root { --card-accent: #e1b85d; }
+#businessName, #mainStars, .rewardStars, .rewardName { color: var(--card-accent); }
+#cardExperience button { display: block; padding: 14px; margin: 12px 0; width: 100%; border-radius: 12px; border: 1px solid #777; background: #222; color: #fff; cursor: pointer; }
+#cardExperience button[hidden] { display: none; }
+#cardExperienceMessage, #cardWelcomeText { overflow-wrap: anywhere; }
 
 body {
   margin: 0;
@@ -263,4 +268,15 @@ footer b {
   color: #777;
   font-size: 10px;
   line-height: 1.5;
+}
+
+/* Enlace del personal en una fila propia, centrado debajo del QR. */
+#checkinLink:not([hidden]) {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 14px auto 0;
+  text-align: center;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }

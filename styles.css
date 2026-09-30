@@ -675,6 +675,11 @@ h2 {
   box-sizing: border-box;
 }
 /* Business control sections */
+.experienceDialog { width: min(720px,94vw); max-height: 90vh; overflow: auto; background: #141416; color: inherit; }
+.experienceDialog::backdrop { background: #000b; }
+.experienceDialog form { display: grid; gap: 12px; padding: 16px 0; }
+.experienceDialog label { display: grid; gap: 6px; }
+.experienceDialog summary { cursor: pointer; padding: 16px 0; font-weight: bold; }
 #ownerAssignmentDialog { width: min(600px, 92vw); max-height: 90vh; overflow: auto; background: #141416; color: inherit; }
 #ownerAssignmentDialog::backdrop { background: #000b; }
 #ownerAssignmentForm { display: grid; gap: 16px; }
