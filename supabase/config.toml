@@ -2,3 +2,7 @@
 # permissions itself for management. A publishable key is not a user identity.
 [functions.loyalty-v2]
 verify_jwt = false
+
+# Public registration. SQL creation is service-role only; the function validates every request.
+[functions.customer-registration]
+verify_jwt = false
