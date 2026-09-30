@@ -1294,6 +1294,8 @@ function openNewBusinessModal() {
 
 function closeNewBusinessModal() {
 
+  if (creatingBusiness) return;
+
   const modal =
     $("newBusinessModal");
 
@@ -1398,351 +1400,38 @@ if (newBusinessLogoInput) {
 
 }
 // ==========================================
-// CREAR NEGOCIO COMPLETO
+// CREAR NEGOCIO COMPLETO, CON REINTENTOS
 // ==========================================
 let creatingBusiness = false;
-const newBusinessForm =
-  $("newBusinessForm");
-
+const newBusinessForm = $("newBusinessForm");
 if (newBusinessForm) {
-
-  newBusinessForm.addEventListener(
-    "submit",
-    async event => {
-
-      event.preventDefault();
-if (creatingBusiness) {
-  return;
-}
-
-creatingBusiness = true;
-      const message =
-        $("newBusinessMessage");
-
-      const button =
-        $("createBusinessButton");
-
-
-      message.textContent =
-        "Creando negocio...";
-
-      button.disabled = true;
-
-
-      try {
-
-        // -----------------------------
-        // DATOS DEL NEGOCIO
-        // -----------------------------
-
-        const name =
-          $("newBusinessName")
-            .value.trim();
-
-        const slug =
-          $("newBusinessSlug")
-            .value.trim()
-            .toLowerCase();
-
-
-        const programName =
-          $("newProgramName")
-            .value.trim()
-          || "Tarjeta de Lealtad";
-
-
-        const primaryColor =
-          $("newPrimaryColor")
-            .value;
-
-
-        const backgroundColor =
-          $("newBackgroundColor")
-            .value;
-
-
-        const progressEmoji =
-          $("newProgressEmoji")
-            .value.trim()
-          || "★";
-
-
-        const emptyEmoji =
-          $("newEmptyEmoji")
-            .value.trim()
-          || "☆";
-
-
-        const progressGoal =
-          Number(
-            $("newProgressGoal").value
-          );
-
-
-        const welcomeText =
-          $("newWelcomeText")
-            .value.trim();
-
-
-        // -----------------------------
-        // 1. CREAR NEGOCIO
-        // -----------------------------
-
-        const {
-          data: businessId,
-          error: businessError
-        } =
-          await db.rpc(
-            "admin_create_business",
-            {
-              new_name: name,
-              new_slug: slug
-            }
-          );
-
-
-        if (businessError) {
-
-          throw businessError;
-
-        }
-
-
-        // -----------------------------
-        // 2. SUBIR LOGOTIPO
-        // -----------------------------
-
-        let logoPath = null;
-
-        const logoFile =
-          $("newBusinessLogo")
-            .files?.[0];
-
-
-        if (logoFile) {
-
-          const extension =
-            logoFile.name
-              .split(".")
-              .pop()
-              .toLowerCase();
-
-
-          logoPath =
-            `${businessId}/logo.${extension}`;
-
-
-          const {
-            error: uploadError
-          } =
-            await db.storage
-              .from("business-assets")
-              .upload(
-                logoPath,
-                logoFile,
-                {
-                  upsert: true
-                }
-              );
-
-
-          if (uploadError) {
-
-            throw uploadError;
-
-          }
-
-        }
-
-
-        // -----------------------------
-        // 3. GUARDAR BRANDING
-        // -----------------------------
-
-        const {
-          error: brandingError
-        } =
-          await db
-            .from("business_branding")
-            .insert({
-
-              business_id:
-                businessId,
-
-              program_name:
-                programName,
-
-              logo_path:
-                logoPath,
-
-              primary_color:
-                primaryColor,
-
-              background_color:
-                backgroundColor,
-
-              progress_emoji:
-                progressEmoji,
-
-              empty_emoji:
-                emptyEmoji,
-
-              progress_goal:
-                progressGoal,
-
-              welcome_text:
-                welcomeText
-
-            });
-
-
-      if (brandingError) {
-  throw brandingError;
-}
-
-
-// -----------------------------
-// 4. CREAR OWNER
-// -----------------------------
-
-message.textContent =
-  "Creando cuenta del Owner...";
-
-const ownerName =
-  $("newOwnerName").value.trim();
-
-const ownerEmail =
-  $("newOwnerEmail")
-    .value.trim()
-    .toLowerCase();
-
-if (!ownerName) {
-  throw new Error(
-    "Escribe el nombre del Owner"
-  );
-}
-
-if (!ownerEmail) {
-  throw new Error(
-    "Escribe el correo del Owner"
-  );
-}
-
-
-const {
-  data: ownerResult,
-  error: ownerFunctionError
-} =
-  await db.functions.invoke(
-    "create-business-owner",
-    {
-      body: {
-        business_id: businessId,
-        owner_name: ownerName,
-        owner_email: ownerEmail
-      }
-    }
-  );
-
-
-if (ownerFunctionError) {
-
-  console.error(
-    "Error Edge Function:",
-    ownerFunctionError
-  );
-
-  throw new Error(
-  await invitationErrorMessage(ownerFunctionError, "No se pudo contactar al servidor para crear el Owner")
-);
-}
-
-
-if (
-  !ownerResult ||
-  ownerResult.success !== true
-) {
-
-  console.error(
-    "Respuesta Owner:",
-    ownerResult
-  );
-
-  throw new Error(
-    ownerResult?.error ||
-    "No se pudo crear el Owner"
-  );
-}
-
-
-// -----------------------------
-// ÉXITO
-// -----------------------------
-
-message.textContent =
-  "✓ Negocio y Owner creados correctamente";
-
-
-        setTimeout(
-          async () => {
-
-            closeNewBusinessModal();
-
-            newBusinessForm.reset();
-
-            $("newPrimaryColor").value =
-              "#E1B85D";
-
-            $("newBackgroundColor").value =
-              "#0D0D0E";
-
-            $("newProgressEmoji").value =
-              "★";
-
-            $("newEmptyEmoji").value =
-              "☆";
-
-            $("newProgressGoal").value =
-              "10";
-
-            $("newProgramName").value =
-              "Tarjeta de Lealtad";
-
-            $("businessPreviewLogo")
-              .innerHTML =
-              "LOGO";
-
-            updateBusinessPreview();
-
-            await openBusinessAdmin();
-
-          },
-          800
-        );
-
-
-      } catch (error) {
-
-  console.error(error);
-
-  message.textContent =
-    "Error: " +
-    (
-      error.message ||
-      "No se pudo crear el negocio"
-    );
-
-} finally {
-
-  creatingBusiness = false;
-
-  button.disabled = false;
-
-}
-
-    }
-  );
-
+ newBusinessForm.addEventListener("submit",async event=>{
+  event.preventDefault();if(creatingBusiness)return;
+  creatingBusiness=true;const message=$("newBusinessMessage"),button=$("createBusinessButton");
+  const controls=[...newBusinessForm.elements],priorDisabled=controls.map(el=>el.disabled);
+  controls.forEach(el=>el.disabled=true);$("closeNewBusiness").disabled=true;
+  try{
+   const result=await window.BusinessSetup.run(db,{
+    name:$("newBusinessName").value,slug:$("newBusinessSlug").value,
+    ownerName:$("newOwnerName").value,ownerEmail:$("newOwnerEmail").value,
+    logoFile:$("newBusinessLogo").files?.[0],
+    branding:{program_name:$("newProgramName").value.trim()||"Tarjeta de Lealtad",
+     primary_color:$("newPrimaryColor").value,background_color:$("newBackgroundColor").value,
+     progress_emoji:$("newProgressEmoji").value.trim()||"★",empty_emoji:$("newEmptyEmoji").value.trim()||"☆",
+     progress_goal:Number($("newProgressGoal").value),welcome_text:$("newWelcomeText").value.trim()}
+   },assignOwnerToBusiness,text=>message.textContent=text);
+   message.textContent="✓ Negocio configurado. "+result.ownerMessage;
+   // Keep the outcome visible instead of closing over the invitation status.
+   newBusinessForm.reset();$("businessPreviewLogo").innerHTML="LOGO";updateBusinessPreview();
+   button.textContent="CREAR NEGOCIO";
+   try{await openBusinessAdmin()}catch{message.textContent+=" Recarga el panel para actualizar la lista."}
+  }catch(error){
+   message.textContent="Error: "+(error.message||"No se pudo completar el negocio");
+   button.textContent=error.businessId?"Continuar alta":"CREAR NEGOCIO";
+  }finally{
+   creatingBusiness=false;controls.forEach((el,i)=>el.disabled=priorDisabled[i]);$("closeNewBusiness").disabled=false;
+  }
+ });
 }
 // ==========================================
 // BALDERAS SUPERADMIN - OWNERS
