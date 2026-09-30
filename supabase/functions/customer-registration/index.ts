@@ -19,7 +19,13 @@ Deno.serve(async(req:Request)=>{
   if(body.action==='info'){
    const branding=await db.from('business_branding').select('logo_path').eq('business_id',l.data.business_id).maybeSingle();
    if(branding.error)throw new Error('No se pudo consultar el diseño del negocio.');
-   const logo=branding.data?.logo_path?db.storage.from('business-assets').getPublicUrl(branding.data.logo_path).data.publicUrl:'';
+   let logo=branding.data?.logo_path?db.storage.from('business-assets').getPublicUrl(branding.data.logo_path).data.publicUrl:'';
+   if(!logo){
+    const presentation=await db.from('card_presentation').select('logo_url').eq('business_id',l.data.business_id).maybeSingle();
+    if(presentation.error)throw new Error('No se pudo consultar el logotipo de la tarjeta.');
+    const saved=presentation.data?.logo_url;
+    if(typeof saved==='string'&&saved.startsWith('https://'))logo=saved;
+   }
    return reply(200,{name:b.data.name,logo_url:logo});
   }
   if(body.action!=='register'||!uuid(body.request_id))return reply(400,{error:'Solicitud inválida.'});
