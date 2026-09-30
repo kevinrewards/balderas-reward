@@ -1653,8 +1653,7 @@ if (ownerFunctionError) {
   );
 
   throw new Error(
-  ownerFunctionError.message ||
-  "No se pudo contactar al servidor para crear el Owner"
+  await invitationErrorMessage(ownerFunctionError, "No se pudo contactar al servidor para crear el Owner")
 );
 }
 
@@ -2634,8 +2633,7 @@ if (!canCreateStaff) {
       console.error(error);
 
       message.textContent =
-        error.message ||
-        "No se pudo crear el empleado.";
+        await invitationErrorMessage(error, "No se pudo crear el empleado.");
 
       return;
 
@@ -2694,3 +2692,15 @@ if (!canCreateStaff) {
   }
 
 })();
+
+// Mostrar los rechazos de la función sin perder el detalle devuelto por el servidor.
+async function invitationErrorMessage(error, fallback) {
+  try {
+    const response = error?.context;
+    if (response && typeof response.clone === "function") {
+      const body = await response.clone().json();
+      if (typeof body?.error === "string" && body.error.trim()) return body.error;
+    }
+  } catch (_) { /* La respuesta puede no contener JSON. */ }
+  return error?.message || fallback;
+}

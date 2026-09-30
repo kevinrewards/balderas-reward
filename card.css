@@ -269,3 +269,14 @@ footer b {
   font-size: 10px;
   line-height: 1.5;
 }
+
+/* Enlace del personal en una fila propia, centrado debajo del QR. */
+#checkinLink:not([hidden]) {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 14px auto 0;
+  text-align: center;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}

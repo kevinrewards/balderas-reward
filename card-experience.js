@@ -13,7 +13,7 @@ window.cardExperience=(()=>{
   const r=await db.rpc('get_card_experience',{card_token:token});if(r.error||!r.data)return;
   const {design,campaigns}=r.data;
   if(design){
-   document.body.style.background=design.background_color;
+   document.body.style.background=['#111112','#0d0d0e','#111111'].includes((design.background_color||'').toLowerCase())?'#f5f5f7':design.background_color;
    document.documentElement.style.setProperty('--card-accent',design.primary_color);
    $('cardProgramName').textContent=design.program_name;$('cardWelcomeText').textContent=design.welcome_text;
    document.title=design.program_name+' | BALDERAS Reward';
@@ -66,3 +66,4 @@ window.cardExperience=(()=>{
  return {init};
 })();
 if (!$('loyaltyCard').hidden) window.cardExperience.init().catch(()=>{});
+

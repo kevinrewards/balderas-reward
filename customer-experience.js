@@ -83,3 +83,4 @@ window.customerExperience = (() => {
   $('businessCustomerExperience').onclick=()=>{if(currentIsSuperAdmin&&selectedBusinessManage)open(selectedBusinessManage.businessId,selectedBusinessManage.businessName);};
   sync();return{open,close,sync};
 })();
+
