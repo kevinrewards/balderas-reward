@@ -20,6 +20,7 @@
   const biz=!!businessId&&!byId('businessWorkspace').hidden;
   if(['home','admin'].includes(key))return key==='home'||!byId('superAdminSection').hidden;
   if(!biz)return false;
+  if(['clients','rewards','promotions'].includes(key)&&window.businessModules?.enabled('loyalty')===false)return false;
   if(key==='staff')return !byId('staffSection').hidden;
   if(key==='promotions'||key==='branding')return available('openCustomerExperience');
   return true;
@@ -34,11 +35,12 @@
   }
  }
  function paint(){
+  const loyalty=window.businessModules?.enabled('loyalty')!==false;
   if(!allowed(view))view='home';
-  for(const [key,panel] of Object.entries(panels))panel.classList.toggle('workspaceOff',view==='home'?!['clients'].includes(key):view!==key);
-  document.querySelector('.stats').classList.toggle('workspaceOff',view!=='home');
-  quick.classList.toggle('workspaceOff',view!=='home');
-  document.querySelector('.workspaceTools').classList.toggle('workspaceOff',!['home','clients'].includes(view));
+  for(const [key,panel] of Object.entries(panels))panel.classList.toggle('workspaceOff',!allowed(key)||(view==='home'?!['clients'].includes(key):view!==key));
+  document.querySelector('.stats').classList.toggle('workspaceOff',view!=='home'||!loyalty);
+  quick.classList.toggle('workspaceOff',view!=='home'||!loyalty);
+  document.querySelector('.workspaceTools').classList.toggle('workspaceOff',!['home','clients'].includes(view)||!loyalty);
   byId('viewSubtitle').textContent=({home:'Tu negocio, de un vistazo.',clients:'Tus clientes, siempre cerca.',rewards:'Beneficios que hacen que vuelvan.',staff:'El equipo detrás de tu negocio.',admin:'Todos tus negocios, en un solo lugar.'})[view];
   for(const b of document.querySelectorAll('[data-view]')){b.hidden=!allowed(b.dataset.view);if(b.dataset.view===view)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
  }
@@ -69,7 +71,7 @@
   const role=currentIsSuperAdmin?'Superadmin':currentBusinessRole==='owner'?'Owner':currentBusinessRole==='staff'?'Staff':'';
   if(byId('sideRole').textContent!==role)byId('sideRole').textContent=role;
   if(lastBusiness!==businessId){lastBusiness=businessId;view='home';byId('customerSearchInput').value='';}
-  byId('quickNewClient').hidden=!available('newClient')||!businessId;
+  byId('quickNewClient').hidden=!available('newClient')||!businessId||window.businessModules?.enabled('loyalty')===false;
   byId('quickPromotion').hidden=!available('openCustomerExperience');
   byId('quickHistory').hidden=!available('openVisitHistory');
   enhanceCustomers();paint();
@@ -85,5 +87,6 @@
  const observer=new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(sync)}});
  for(const id of ['app','businessWorkspace','staffSection','superAdminSection','openCustomerExperience','openVisitHistory','newClient'])observer.observe(byId(id),{attributes:true,attributeFilter:['hidden','disabled']});
  observer.observe(byId('customers'),{childList:true});observer.observe(byId('biz'),{childList:true,characterData:true,subtree:true});
+ window.addEventListener('commerce-modules',sync);
  sync();
 })();

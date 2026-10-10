@@ -18,6 +18,10 @@ async function card(token:string){
  if(c.error||!c.data)throw new Error('Tarjeta no disponible.');
  const b=await service.from('businesses').select('id,name,active').eq('id',c.data.business_id).eq('active',true).single();
  if(b.error||!b.data)throw new Error('Negocio no disponible.');
+ const moduleResult=await service.from('business_modules').select('loyalty,catalog,agenda,catalog_label,agenda_label').eq('business_id',b.data.id).single();
+ if(moduleResult.error||!moduleResult.data?.loyalty)throw new Error('El programa de lealtad no está disponible.');
+ const portal=await service.from('business_registration_links').select('public_code').eq('business_id',b.data.id).single();
+ if(portal.error)throw new Error('No se pudo obtener el enlace del negocio.');
  const d=await service.from('card_presentation').select('*').eq('business_id',b.data.id).maybeSingle();
  if(d.error)throw new Error('No se pudo consultar el diseño.');
  const branding=await service.from('business_branding').select('logo_path').eq('business_id',b.data.id).maybeSingle();
@@ -25,7 +29,7 @@ async function card(token:string){
  const logoPath=branding.data?.logo_path;
  const businessLogo=logoPath?service.storage.from('business-assets').getPublicUrl(logoPath).data.publicUrl:'';
  const logoUrl=businessLogo||d.data?.logo_url||new URL('icons/icon-512.png',base).href;
- return {customer:c.data,business:b.data,design:{...d.data,logo_url:logoUrl}};
+ return {customer:c.data,business:b.data,modules:moduleResult.data,portalCode:portal.data.public_code,design:{...d.data,logo_url:logoUrl}};
 }
 
 async function googleAuth(){

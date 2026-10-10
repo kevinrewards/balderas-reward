@@ -36,6 +36,11 @@ window.BusinessSetup = (() => {
     const branding=await client.from('business_branding').upsert({...input.branding,business_id:state.id,logo_path:state.logoPath},{onConflict:'business_id'});
     if(branding.error)throw branding.error;state.brandingSaved=true;save(key,state);
    }
+   if(input.modules){
+    stage='módulos';progress('Configurando módulos…');
+    const modules=await client.rpc('commerce_manage',{bid:state.id,action:'modules',payload:{...input.modules,loyalty_label:'Lealtad',catalog_label:'Menú / Productos',agenda_label:'Pedidos / Agenda',modes:['service']}});
+    if(modules.error)throw modules.error;
+   }
    stage='Owner';progress('Asignando el Owner…');
    const ownerMessage=await assignOwner(client,state.id,ownerName,ownerEmail);
    clear(key);return {businessId:state.id,ownerMessage};

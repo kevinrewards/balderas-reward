@@ -11,3 +11,9 @@ test('Wallet object stays scoped to customer and business with a live balance li
  assert.equal(r.passObject.barcode.value,'https://example.com/reward/checkin.html?token=token');
  assert.equal(r.passClass.programName,'Club');assert.equal(r.passObject.loyaltyPoints,undefined);
 });
+
+test('Wallet links use the business public code and only enabled modules',()=>{
+ const args={issuer:'123',customer:{id:'customer-1',name:'Ana',qr_token:'private-customer-token'},business:{id:'business-1',name:'Negocio'},design:{},base:'https://balderas-reward.netlify.app/',portalCode:'business-public-code',modules:{catalog:true,agenda:false,catalog_label:'Menú'}};
+ const data=walletPayload(args);const links=data.passObject.linksModuleData.uris;
+ assert.equal(links.length,2);assert.equal(links[1].uri,'https://balderas-reward.netlify.app/negocio.html?negocio=business-public-code#catalogo');assert.equal(links[1].description,'Menú');assert(!links[1].uri.includes('private-customer-token'));
+});

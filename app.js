@@ -769,6 +769,7 @@ window.visitHistory?.sync();
 await loadBusinessStaff();
   await window.rewardManager?.syncPermission();
   window.customerExperience?.sync();
+  await window.businessModules?.sync();
   $("status").textContent =
     "Datos sincronizados con Supabase.";
 }
@@ -1414,6 +1415,7 @@ if (newBusinessForm) {
    const result=await window.BusinessSetup.run(db,{
     name:$("newBusinessName").value,slug:$("newBusinessSlug").value,
     ownerName:$("newOwnerName").value,ownerEmail:$("newOwnerEmail").value,
+    modules:window.businessModules?.newSelection(),
     logoFile:$("newBusinessLogo").files?.[0],
     branding:{program_name:$("newProgramName").value.trim()||"Tarjeta de Lealtad",
      primary_color:$("newPrimaryColor").value,background_color:$("newBackgroundColor").value,

@@ -7,7 +7,7 @@
  const nav=document.querySelector('.workspaceSidebar nav');nav.insertBefore(button,nav.querySelector('.supportNav'));
  let revision=0,current=null;
  function sync(){
-  button.hidden=!businessId||$('businessWorkspace').hidden||!(currentIsSuperAdmin||['owner','staff'].includes(currentBusinessRole));
+  button.hidden=window.businessModules?.enabled('loyalty')===false||!businessId||$('businessWorkspace').hidden||!(currentIsSuperAdmin||['owner','staff'].includes(currentBusinessRole));
   if(current!==businessId||button.hidden){++revision;dialog.close();current=businessId;}
  }
  function controls(disabled){for(const id of ['registrationCopy','registrationDownload','registrationPrint'])$(id).disabled=disabled;$('registrationOpen').hidden=disabled;}
@@ -46,5 +46,6 @@
  $('registrationPrint').onclick=()=>window.print();
  const refresh=document.createElement('button');refresh.type='button';refresh.className='secondary compact';refresh.id='refreshClients';refresh.textContent='Actualizar clientes';refresh.onclick=async()=>{refresh.disabled=true;try{await load()}finally{refresh.disabled=false}};$('customers').closest('section').querySelector('.sectionhead').appendChild(refresh);
  const observer=new MutationObserver(sync);observer.observe($('biz'),{childList:true,characterData:true,subtree:true});for(const id of ['businessWorkspace','app','staffSection','superAdminSection'])observer.observe($(id),{attributes:true,attributeFilter:['hidden']});
+ window.addEventListener('commerce-modules',sync);
  sync();
 })();
