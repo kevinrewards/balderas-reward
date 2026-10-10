@@ -33,8 +33,7 @@ window.customerExperience = (() => {
     const brightness=[1,3,5].reduce((n,i,j)=>n+parseInt(bg.slice(i,i+2),16)*[.2126,.7152,.0722][j],0);wallet.style.color=brightness>150?'#171717':'#ffffff';
     $('walletPreviewName').textContent=f.program_name.value;
     const symbol=walletBranding?.progress_emoji||'★';
-    const icon=/[📷📸]/u.test(symbol)?'camera':/[❤♥💛💙💚💜]/u.test(symbol)?'heart':symbol.includes('☕')?'coffee':symbol.includes('🎁')?'gift':'star';
-    const url=new URL('https://aitupbowuekcfdqsksny.supabase.co/functions/v1/loyalty-v2');url.search=new URLSearchParams({action:'art',v:'1',done:'5',total:'10',bg,accent:f.primary_color.value,icon});
+    const url=new URL('https://aitupbowuekcfdqsksny.supabase.co/functions/v1/loyalty-v2');url.search=new URLSearchParams({action:'art',v:'2',done:'5',total:'10',bg,accent:f.primary_color.value,icon:symbol,empty:walletBranding?.empty_emoji||'☆'});
     $('walletPreviewArt').src=url.href;
     const logo=walletBranding?.logo_path?db.storage.from('business-assets').getPublicUrl(walletBranding.logo_path).data.publicUrl:f.logo_url.value;
     $('walletPreviewLogo').hidden=!logo?.startsWith('https://');if(!$('walletPreviewLogo').hidden)$('walletPreviewLogo').src=logo;
@@ -64,7 +63,7 @@ window.customerExperience = (() => {
       const r=await db.from('card_presentation').select('*').eq('business_id',bid).maybeSingle();
       if(ticket!==revision)return;if(r.error)throw r.error;
       design().reset();const values=r.data||{program_name:name};for(const [key,value]of Object.entries(values))if(design().elements.namedItem(key))design().elements.namedItem(key).value=value;
-      const branding=await db.from('business_branding').select('logo_path,progress_emoji').eq('business_id',bid).maybeSingle();if(ticket!==revision)return;walletBranding=branding.data;
+      const branding=await db.from('business_branding').select('logo_path,progress_emoji,empty_emoji').eq('business_id',bid).maybeSingle();if(ticket!==revision)return;walletBranding=branding.data;
       preview();await campaigns();if(ticket!==revision)return;message().textContent='';
       for(const f of [design(),$('experienceCampaign')])for(const e of f.elements)e.disabled=false;
     }catch(error){if(ticket===revision)message().textContent=error.message;}

@@ -22,13 +22,13 @@ test('Image is a bounded valid PNG; snapshots differ and hostile parameters norm
  assert.notDeepEqual(renderArt({done:0}),renderArt({done:10}));
  assert.equal(artOptions({total:Infinity,bg:'url(evil)',icon:'../file'}).total,10);
  assert.equal(artOptions({total:999999999,done:Infinity}).total,100000);
- assert.equal(iconFor('📸'),'camera');assert.equal(iconFor('☕'),'coffee');assert.equal(iconFor('🦄'),'star');
- for(const icon of ['star','camera','heart','coffee','gift'])assert(renderArt({icon}).length>100);
+ assert.equal(iconFor('📸'),'📸');assert.equal(iconFor('☕'),'☕');assert.equal(iconFor('🦄'),'🦄');
+ for(const icon of ['★','☆','○','●'])assert(renderArt({icon,done:5}).length>100);
  assert(renderArt({total:100,done:30}).length>100);
 });
 async function fixture({missing=false,disabled=false,rejectObject=false}={}){
  const writes=[],dbCalls=[];let handler;
- const service={from(table){dbCalls.push(table);const data={customers:{id:'c-1',name:'Ana',business_id:'b-1',qr_token:'00000000-0000-0000-0000-000000000001',active:true},businesses:{id:'b-1',name:'LG Estudio',active:true},business_modules:{loyalty:!disabled,catalog:true,agenda:true},business_registration_links:{public_code:'public-business'},card_presentation:{program_name:'Club',primary_color:'#e1b85d',background_color:'#111112'},business_branding:{logo_path:null,progress_emoji:'📷'}}[table];const chain={select(){return chain},eq(){return chain},single:async()=>({data}),maybeSingle:async()=>({data})};return chain;},rpc:async name=>({data:name==='get_loyalty_card'?rows:[{progress_emoji:'📷'}]})};
+ const service={from(table){dbCalls.push(table);const data={customers:{id:'c-1',name:'Ana',business_id:'b-1',qr_token:'00000000-0000-0000-0000-000000000001',active:true},businesses:{id:'b-1',name:'LG Estudio',active:true},business_modules:{loyalty:!disabled,catalog:true,agenda:true},business_registration_links:{public_code:'public-business'},card_presentation:{program_name:'Club',primary_color:'#e1b85d',background_color:'#111112'},business_branding:{logo_path:null,progress_emoji:'🍱',empty_emoji:'○'}}[table];const chain={select(){return chain},eq(){return chain},single:async()=>({data}),maybeSingle:async()=>({data})};return chain;},rpc:async name=>({data:name==='get_loyalty_card'?rows:[{progress_emoji:'🍱',empty_emoji:'○'}]})};
  class JWT{setProtectedHeader(){return this}setIssuer(){return this}setAudience(){return this}setIssuedAt(){return this}setExpirationTime(){return this}async sign(){return 'test-jwt'}}
  const env={SUPABASE_URL:'https://project.supabase.co',PUBLIC_APP_URL:'https://example.com/',GOOGLE_WALLET_ISSUER_ID:'123',GOOGLE_SERVICE_ACCOUNT_JSON:JSON.stringify({private_key:'fake',client_email:'test@example.com'})};
  const fetch=async(url,opt={})=>{
@@ -42,7 +42,7 @@ async function fixture({missing=false,disabled=false,rejectObject=false}={}){
   return new Response(JSON.stringify({reviewStatus:'APPROVED'}),{status:missing?404:200});
  };
  let src=await readFile(new URL('../supabase/functions/loyalty-v2/index.ts',import.meta.url),'utf8');src=src.replace(/^import .+;\n/gm,'');
- const context={Deno:{env:{get:k=>env[k]},serve:fn=>{handler=fn}},createClient:()=>service,importPKCS8:async()=>({}),SignJWT:JWT,validPushSubscription,walletPayload,walletProgress,renderArt,iconFor,URL,URLSearchParams,Request,Response,Date,console,fetch};
+ const context={Deno:{env:{get:k=>env[k]},serve:fn=>{handler=fn}},createClient:()=>service,importPKCS8:async()=>({}),SignJWT:JWT,validPushSubscription,walletPayload,walletProgress,renderArt,iconFor,loadSymbols:async()=>({}),URL,URLSearchParams,Request,Response,Date,console,fetch};
  vm.runInNewContext(stripTypeScriptTypes(src),context);
  return {handler,writes,dbCalls};
 }
@@ -51,7 +51,7 @@ test('Refresh updates an existing pass from database, preserving QR and module l
  const f=await fixture(),r=await f.handler(req('refresh_wallet'));assert.equal(r.status,200);assert.deepEqual(await r.json(),{updated:true});
  assert.equal(f.writes.length,2);const object=f.writes[1].body;assert.equal(object.loyaltyPoints.balance.int,7);assert.equal(object.linksModuleData.uris.length,3);assert(object.barcode.value.includes('checkin.html'));
  assert.equal(f.writes[0].body.reviewStatus,'UNDER_REVIEW');
- const image=new URL(object.heroImage.sourceUri.uri);assert.equal(image.searchParams.get('icon'),'camera');assert(!image.href.includes('00000000'));assert(!image.href.includes('Ana'));assert.equal(image.searchParams.get('done'),'7');
+ const image=new URL(object.heroImage.sourceUri.uri);assert.equal(image.searchParams.get('icon'),'🍱');assert.equal(image.searchParams.get('empty'),'○');assert.equal(image.searchParams.get('v'),'2');assert(!image.href.includes('00000000'));assert(!image.href.includes('Ana'));assert.equal(image.searchParams.get('done'),'7');
 });
 test('Refresh never creates passes; disabled loyalty and unsupported methods remain blocked',async()=>{
  const f=await fixture({missing:true});assert.deepEqual(await(await f.handler(req('refresh_wallet'))).json(),{skipped:true});assert.equal(f.writes.length,0);

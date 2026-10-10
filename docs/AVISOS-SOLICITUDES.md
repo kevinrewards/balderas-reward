@@ -1,16 +1,20 @@
-# Avisos de pedidos y citas
+# Avisos de pedidos y citas + símbolos Wallet v2
 
-Actualización posterior al diseño Wallet ya publicado. No cambia la tarjeta Wallet, sus visitas, canjes, diseños o enlaces. Estos avisos son Web Push independientes del programa de lealtad y sirven también a negocios que solo tienen agenda.
+Incluye la corrección de símbolos Wallet: utiliza progress_emoji y empty_emoji del negocio, con figuras Twemoji en color y círculos/estrellas básicos. Conserva visitas, canjes y enlaces. Estos avisos son Web Push independientes del programa de lealtad y sirven también a negocios que solo tienen agenda.
 
 ## Instalación
 
-1. Extraer BALDERAS-Reward-avisos-solicitudes.zip.
-2. Abrir 01-avisos.sql en Bloc de notas y ejecutar TODO en Supabase → SQL Editor. Es una migración nueva; ejecutarla una sola vez.
+1. Extraer BALDERAS-Reward-avisos-y-wallet-v2.zip.
+2. Abrir 01-avisos.sql en Bloc de notas y ejecutar TODO en Supabase → SQL Editor. Ejecutarla una sola vez. Si ya ejecutaste 01-avisos.sql del paquete anterior con éxito, omite este paso: es el mismo SQL.
 3. Edge Functions → commerce → Code. Reemplazar todo index.ts por 03-commerce-index.txt. Añadir un archivo llamado exactamente push-policy.mjs y pegar 04-push-policy.txt. Desplegar ambos juntos con Deploy updates.
 4. En commerce, Verify JWT with legacy secret debe seguir APAGADO. Las acciones públicas usan el token privado del seguimiento; el envío programado valida un ticket de uso único en el servidor.
 5. Ejecutar 02-envio-automatico.sql en SQL Editor. Habilita pg_cron y pg_net y crea dos tareas propias: balderas-commerce-push y balderas-commerce-push-cleanup. Si la plataforma impide crear las extensiones, habilitarlas en Database → Extensions y volver a ejecutar este segundo archivo.
 6. Extraer 05-netlify-web.zip y publicar ESA carpeta en el sitio actual balderas-reward. No subir el ZIP externo con el código de servidor.
-7. Abrir el panel con Ctrl+F5 y actualizar el seguimiento del cliente. No hay que regenerar sus enlaces.
+7. Después de publicar Netlify, Edge Functions → loyalty-v2 → Code: sustituir index.ts con 06-wallet-index.txt y art.mjs con 07-wallet-art.txt. Añadir symbols.mjs con 08-wallet-symbols.txt. Conservar policy.mjs existente. Nombres exactos .mjs (no .msj). Deploy updates; conservar los secretos y la configuración JWT existentes.
+8. Abrir el panel con Ctrl+F5 y comprobar la vista previa. En la tarjeta web del cliente, pulsar Actualizar pase guardado. Comprobar en Google Wallet la figura elegida y las visitas pendientes. No registrar visitas nuevas para forzar esta actualización ni eliminar el pase. Cada pase existente necesita una actualización manual o su siguiente visita/canje para recibir la nueva imagen; este paquete no actualiza masivamente todos los pases.
+9. Probar el seguimiento del cliente y los avisos según los pasos siguientes. No hay que regenerar enlaces.
+
+Wallet v2 usa los 3,846 gráficos Twemoji 16.0.1 incluidos en icons/wallet-emoji-v2 dentro del ZIP web; NO omitir esa carpeta al publicar. La función solo consulta esa ruta fija del sitio, no servidores indicados por clientes. Colores/formas de un emoji pueden variar respecto al dibujo del sistema operativo. Estrellas ★/☆ y círculos ○/● se dibujan en el color del negocio; los emojis conservan sus colores. Admite secuencias emoji y varios símbolos dentro del límite existente de 16 unidades de texto. No admite cualquier carácter tipográfico ni imágenes/logotipos subidos como símbolo de visitas. Una figura no disponible produce un error de actualización en lugar de reemplazarla silenciosamente por estrellas. Para metas mayores de 20 se conserva la barra proporcional existente. URL de imagen v2 evita reutilizar la imagen v1 guardada en caché.
 
 Reutiliza VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT y PUBLIC_APP_URL configurados para las promociones. Son secretos globales del proyecto: no copiar claves al navegador ni al SQL. No se necesita un proveedor de correo o WhatsApp. Las cuotas existentes de Supabase/Netlify siguen aplicando.
 
@@ -57,6 +61,6 @@ Pruebas locales: PostgreSQL/PGlite con RLS y permisos, reemplazo de eventos pend
 
 Pausar solo el envío automático: UPDATE cron.job SET active=false WHERE jobname='balderas-commerce-push'; Reactivar con active=true. Los avisos recientes pendientes podrán enviarse al reactivar.
 
-Para revertir por completo la función de avisos: pausar ambas tareas propias, ejecutar DROP TRIGGER IF EXISTS commerce_event_push ON public.commerce_events; restaurar el index.ts anterior de commerce incluido en RESPALDO-commerce (push-policy.mjs puede quedarse sin uso) y republicar el despliegue anterior de Netlify. No borrar las tablas si se quiere conservar el historial. El código de Wallet no necesita cambios.
+Para revertir por completo la función de avisos: pausar ambas tareas propias, ejecutar DROP TRIGGER IF EXISTS commerce_event_push ON public.commerce_events; restaurar el index.ts anterior de commerce incluido en RESPALDO-commerce (push-policy.mjs puede quedarse sin uso) y republicar el despliegue anterior de Netlify. No borrar las tablas si se quiere conservar el historial. Para revertir los símbolos Wallet, restaurar los tres archivos de RESPALDO-wallet y quitar el import de symbols.mjs al restaurar index.ts; el archivo adicional puede quedar sin uso. Restaurar también el despliegue anterior de Netlify.
 
 Referencias: https://supabase.com/docs/guides/cron/quickstart ; https://supabase.com/docs/guides/troubleshooting/database-roles-can-read-request-headers-queued-by-pg_net-ad6357 ; https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/

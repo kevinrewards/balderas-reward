@@ -36,3 +36,6 @@ Fuentes oficiales: https://developers.google.com/wallet/retail/loyalty-cards/res
 ## Volver atrás
 
 El paquete contiene `RESPALDO-loyalty-v2/` con index.ts y policy.mjs anteriores. Para revertir, restaura ambos y despliega; art.mjs puede quedar sin utilizar. En Netlify vuelve a publicar el despliegue anterior. No hay migración de datos que deshacer. Los pases ya actualizados conservan su aspecto hasta que se actualicen de nuevo; no se eliminan automáticamente los campos opcionales existentes en Google.
+
+## Corrección v2 de figuras
+El paquete combinado docs/AVISOS-SOLICITUDES.md sustituye la limitación inicial a cinco iconos. Se respetan progress_emoji y empty_emoji usando gráficos Twemoji incluidos en assets/wallet-emoji-v2.zip, con atribución CC-BY 4.0. La imagen usa v=2. Consultar las instrucciones combinadas para instalación y límites.

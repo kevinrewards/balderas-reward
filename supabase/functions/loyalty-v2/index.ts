@@ -3,6 +3,7 @@ import {importPKCS8,SignJWT} from 'npm:jose@5';
 import webpush from 'npm:web-push@3.6.7';
 import {validPushSubscription,walletPayload,walletProgress} from './policy.mjs';
 import {renderArt,iconFor} from './art.mjs';
+import {loadSymbols} from './symbols.mjs';
 
 const env=(key:string)=>Deno.env.get(key)||'';
 const options={auth:{persistSession:false,autoRefreshToken:false}};
@@ -25,12 +26,12 @@ async function card(token:string){
  if(portal.error)throw new Error('No se pudo obtener el enlace del negocio.');
  const d=await service.from('card_presentation').select('*').eq('business_id',b.data.id).maybeSingle();
  if(d.error)throw new Error('No se pudo consultar el diseño.');
- const branding=await service.from('business_branding').select('logo_path,progress_emoji').eq('business_id',b.data.id).maybeSingle();
+ const branding=await service.from('business_branding').select('logo_path,progress_emoji,empty_emoji').eq('business_id',b.data.id).maybeSingle();
  if(branding.error)throw new Error('No se pudo consultar el logotipo del negocio.');
  const logoPath=branding.data?.logo_path;
  const businessLogo=logoPath?service.storage.from('business-assets').getPublicUrl(logoPath).data.publicUrl:'';
  const logoUrl=businessLogo||d.data?.logo_url||new URL('icons/icon-512.png',base).href;
- return {progressSymbol:branding.data?.progress_emoji,customer:c.data,business:b.data,modules:moduleResult.data,portalCode:portal.data.public_code,design:{...d.data,logo_url:logoUrl}};
+ return {progressSymbol:branding.data?.progress_emoji,emptySymbol:branding.data?.empty_emoji,customer:c.data,business:b.data,modules:moduleResult.data,portalCode:portal.data.public_code,design:{...d.data,logo_url:logoUrl}};
 }
 
 async function googleAuth(){
@@ -56,7 +57,8 @@ async function googleSave(context:any,refreshOnly=false){
  if(balance.error)throw new Error('No se pudo consultar el saldo de visitas.');
  const progress=walletProgress(balance.data);
  const art=new URL(env('SUPABASE_URL')+'/functions/v1/loyalty-v2');
- art.search=new URLSearchParams({action:'art',v:'1',done:String(progress.done),total:String(progress.total),bg:context.design.background_color||'#111112',accent:context.design.primary_color||'#e1b85d',icon:iconFor(context.progressSymbol)}).toString();
+ art.search=new URLSearchParams({action:'art',v:'2',done:String(progress.done),total:String(progress.total),bg:context.design.background_color||'#111112',accent:context.design.primary_color||'#e1b85d',icon:iconFor(context.progressSymbol),empty:iconFor(context.emptySymbol||'☆')}).toString();
+ await loadSymbols(Object.fromEntries(art.searchParams));
  const updatedAt=new Date().toISOString();
  const payload=walletPayload({...context,issuer:env('GOOGLE_WALLET_ISSUER_ID'),base,progress,artUrl:art.href,updatedAt});
  for(const [resource,id,body] of [['loyaltyClass',payload.classId,payload.passClass],['loyaltyObject',payload.objectId,payload.passObject]] as const){
@@ -85,7 +87,9 @@ Deno.serve(async(request:Request)=>{
   const artRequest=new URL(request.url);
   if(request.method==='GET'&&artRequest.searchParams.get('action')==='art'){
    if(artRequest.search.length>600)return reply(400,{error:'Imagen inválida.'});
-   return new Response(renderArt(Object.fromEntries(artRequest.searchParams)),{headers:{'Content-Type':'image/png','Cache-Control':'public, max-age=31536000, immutable','Access-Control-Allow-Origin':'*','X-Content-Type-Options':'nosniff'}});
+   const values=Object.fromEntries(artRequest.searchParams);
+   const sprites=await loadSymbols(values);
+   return new Response(renderArt({...values,sprites}),{headers:{'Content-Type':'image/png','Cache-Control':'public, max-age=31536000, immutable','Access-Control-Allow-Origin':'*','X-Content-Type-Options':'nosniff'}});
   }
   if(!base.startsWith('https://')||!base.endsWith('/'))throw new Error('Configura PUBLIC_APP_URL con HTTPS y / al final.');
   const url=new URL(request.url);
