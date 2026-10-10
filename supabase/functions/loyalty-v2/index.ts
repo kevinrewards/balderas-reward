@@ -65,9 +65,13 @@ async function googleSave(context:any,refreshOnly=false){
   const current=await fetch(`${root}/${id}`,{headers});
   if(current.status!==404&&!current.ok)throw new Error('No se pudo consultar el pase en Google Wallet.');
   const data:Record<string,unknown>={...body};
-  if(resource==='loyaltyClass'&&current.status!==404)delete data.reviewStatus;
+  if(resource==='loyaltyClass')data.reviewStatus='UNDER_REVIEW';
   const saved=await fetch(current.status===404?root:`${root}/${id}`,{method:current.status===404?'POST':'PATCH',headers,body:JSON.stringify(data)});
-  if(!saved.ok&&saved.status!==409)throw new Error('Google Wallet rechazó el pase. Revisa la cuenta de emisor y su aprobación.');
+  if(!saved.ok&&saved.status!==409){
+   const detail=await saved.json().catch(()=>null);
+   const message=String(detail?.error?.message||'Sin detalle adicional.').slice(0,800);
+   throw new Error(`Google Wallet (${resource}, HTTP ${saved.status}): ${message}`);
+  }
  }
  if(refreshOnly)return {updated:true};
  const jwt=await new SignJWT({iss:credentials.client_email,aud:'google',typ:'savetowallet',origins:[new URL(base).origin],payload:{loyaltyObjects:[{id:payload.objectId}]}}).setProtectedHeader({alg:'RS256'}).setIssuedAt().sign(key);
