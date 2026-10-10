@@ -212,6 +212,7 @@ async function addVisit(customerId) {
     return;
   }
 
+  await window.WalletSync?.afterChange(db,{customerId});
   await load();
 }
 
@@ -255,6 +256,7 @@ async function redeem(
     "Recompensa canjeada correctamente."
   );
 
+  await window.WalletSync?.afterChange(db,{customerId});
   await load();
 }
 function getCardURL(token, portable = false) {

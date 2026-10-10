@@ -31,6 +31,11 @@ window.cardExperience=(()=>{
    }
    const manifest=document.createElement('link');manifest.rel='manifest';manifest.href=endpoint+'?action=manifest&token='+encodeURIComponent(token);document.head.appendChild(manifest);
    $('cardWallet').hidden=!config.wallet_ready;
+   if(config.wallet_ready&&!$('cardWalletRefresh')){
+    const refresh=document.createElement('button');refresh.id='cardWalletRefresh';refresh.type='button';refresh.className='secondary';refresh.textContent='Actualizar pase guardado';
+    refresh.onclick=async()=>{refresh.disabled=true;msg('Actualizando Google Wallet…');try{const result=await api('refresh_wallet');msg(result.skipped?'Primero agrega tu tarjeta a Google Wallet.':'Pase actualizado. Google Wallet puede tardar en mostrar los cambios.');}catch{msg('No se pudo actualizar el pase. Tu saldo en esta tarjeta web sigue disponible; puedes reintentar.');}finally{refresh.disabled=false;}};
+    $('cardWallet').after(refresh);
+   }
    $('cardWallet').textContent=/Android/i.test(navigator.userAgent)?'Agregar a Google Wallet':'Google Wallet (para Android)';
    $('cardInstall').hidden=standalone();
    $('cardInstall').textContent=ios?'Instalar tarjeta en iPhone':'Instalar tarjeta';

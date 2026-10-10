@@ -293,6 +293,7 @@ $("confirmVisit").onclick =
       return;
     }
 
+    await window.WalletSync?.afterChange(db,{token});
     customer.available += 1;
 
     $("successName").textContent =

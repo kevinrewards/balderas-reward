@@ -9,20 +9,36 @@ window.customerExperience = (() => {
     <label>Fondo<input name="background_color" type="color" value="#111112"></label>
     <label>Enlace HTTPS del logotipo<input name="logo_url" type="url" placeholder="https://…"></label>
     <p class="muted">Los símbolos de visitas se cambian en Administrar recompensas.</p>
-    <div id="experiencePreview" class="card">Vista previa</div><button type="submit">Guardar diseño</button></form></details>
+    <div id="experiencePreview" class="card">Vista previa</div>
+    <p>Google Wallet · vista aproximada con 5 visitas de ejemplo. La distribución final depende de Google.</p>
+    <div class="walletPreview" id="walletDesignPreview"><header><img id="walletPreviewLogo" alt="Logo del negocio" hidden><div><small>Tarjeta de lealtad</small><strong id="walletPreviewName"></strong></div></header><div class="walletNumbers"><div><small>Visitas</small><strong>5</strong></div><div><small>Meta de visitas</small><strong>10</strong></div></div><img id="walletPreviewArt" alt="Ejemplo de cinco sellos de diez"><div class="walletReward"><small>Próxima recompensa</small><strong>Tu recompensa aparecerá aquí</strong></div><div class="walletQrExample">QR personal del cliente</div></div>
+    <p class="muted">El diseño se aplica al agregar o actualizar un pase. Los pases guardados se actualizan al registrar visitas, canjear o usar “Actualizar pase guardado”. Las imágenes admiten estrella, cámara, corazón, café y regalo; otros símbolos se representan con estrella en Wallet.</p>
+    <button type="submit">Guardar diseño</button></form></details>
    <details><summary>Nueva promoción o novedad</summary><form id="experienceCampaign">
     <label>Tipo<select name="kind"><option value="promotion">Promoción</option><option value="news">Novedad</option></select></label>
     <label>Título<input name="title" maxlength="80" required></label><label>Mensaje<textarea name="body" maxlength="500" required></textarea></label>
     <label>Vigente hasta (hora del dispositivo)<input name="expires_at" type="datetime-local" required></label><button type="submit">Guardar borrador</button></form></details>
    <label><input id="experienceShowOld" type="checkbox"> Mostrar archivadas y vencidas para eliminarlas</label><div id="experienceCampaigns"></div><p id="experienceMessage" role="status"></p>`;
   dialog.setAttribute('aria-labelledby','experienceTitle');document.body.appendChild(dialog);
-  let id=null,revision=0,busy=false,expiryTimer=null;
+  let id=null,revision=0,busy=false,expiryTimer=null,walletBranding=null;
   const message=()=>document.getElementById('experienceMessage');
   const design=()=>document.getElementById('experienceDesign');
   async function permission(bid){const r=await db.rpc('can_manage_business_settings',{target_business_id:bid});if(r.error||r.data!==true)throw new Error('Solo Owner de este negocio o Superadmin.');}
   function close(force=false){if(busy&&!force)return;++revision;id=null;clearTimeout(expiryTimer);expiryTimer=null;dialog.close();}
   function sync(){ $('openCustomerExperience').hidden=!businessId||!(currentIsSuperAdmin||currentBusinessRole==='owner'); }
-  function preview(){const f=design().elements,p=$('experiencePreview');p.style.background=f.background_color.value;p.style.color=f.primary_color.value;p.textContent=f.program_name.value+' · '+f.welcome_text.value;}
+  function preview(){
+    const f=design().elements,p=$('experiencePreview');p.style.background=f.background_color.value;p.style.color=f.primary_color.value;p.textContent=f.program_name.value+' · '+f.welcome_text.value;
+    const wallet=$('walletDesignPreview'),bg=f.background_color.value;
+    wallet.style.background=bg;
+    const brightness=[1,3,5].reduce((n,i,j)=>n+parseInt(bg.slice(i,i+2),16)*[.2126,.7152,.0722][j],0);wallet.style.color=brightness>150?'#171717':'#ffffff';
+    $('walletPreviewName').textContent=f.program_name.value;
+    const symbol=walletBranding?.progress_emoji||'★';
+    const icon=/[📷📸]/u.test(symbol)?'camera':/[❤♥💛💙💚💜]/u.test(symbol)?'heart':symbol.includes('☕')?'coffee':symbol.includes('🎁')?'gift':'star';
+    const url=new URL('https://aitupbowuekcfdqsksny.supabase.co/functions/v1/loyalty-v2');url.search=new URLSearchParams({action:'art',v:'1',done:'5',total:'10',bg,accent:f.primary_color.value,icon});
+    $('walletPreviewArt').src=url.href;
+    const logo=walletBranding?.logo_path?db.storage.from('business-assets').getPublicUrl(walletBranding.logo_path).data.publicUrl:f.logo_url.value;
+    $('walletPreviewLogo').hidden=!logo?.startsWith('https://');if(!$('walletPreviewLogo').hidden)$('walletPreviewLogo').src=logo;
+  }
   async function campaigns(){
     const ticket=revision,bid=id;
     let query=db.from('business_campaigns').select('id,title,body,kind,status,expires_at').eq('business_id',bid);
@@ -41,13 +57,14 @@ window.customerExperience = (() => {
     if(visible.length&&!$('experienceShowOld').checked)expiryTimer=setTimeout(()=>renderCampaigns(rows),Math.min(2147483647,Math.max(1,Math.min(...visible.map(c=>Date.parse(c.expires_at)))-Date.now()+1)));
   }
   async function open(bid,name){
-    if(busy)return;close();const ticket=revision;id=bid;$('experienceTitle').textContent='Tarjeta y promociones · '+name;design().reset();$('experienceCampaigns').innerHTML='';dialog.showModal();message().textContent='Cargando…';
+    if(busy)return;close();walletBranding=null;const ticket=revision;id=bid;$('experienceTitle').textContent='Tarjeta y promociones · '+name;design().reset();$('experienceCampaigns').innerHTML='';dialog.showModal();message().textContent='Cargando…';
     for(const f of [design(),$('experienceCampaign')])for(const e of f.elements)e.disabled=true;
     try{
       await permission(bid);if(ticket!==revision)return;
       const r=await db.from('card_presentation').select('*').eq('business_id',bid).maybeSingle();
       if(ticket!==revision)return;if(r.error)throw r.error;
       design().reset();const values=r.data||{program_name:name};for(const [key,value]of Object.entries(values))if(design().elements.namedItem(key))design().elements.namedItem(key).value=value;
+      const branding=await db.from('business_branding').select('logo_path,progress_emoji').eq('business_id',bid).maybeSingle();if(ticket!==revision)return;walletBranding=branding.data;
       preview();await campaigns();if(ticket!==revision)return;message().textContent='';
       for(const f of [design(),$('experienceCampaign')])for(const e of f.elements)e.disabled=false;
     }catch(error){if(ticket===revision)message().textContent=error.message;}

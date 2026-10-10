@@ -1,7 +1,8 @@
 import {createClient} from 'npm:@supabase/supabase-js@2';
 import {importPKCS8,SignJWT} from 'npm:jose@5';
 import webpush from 'npm:web-push@3.6.7';
-import {validPushSubscription,walletPayload} from './policy.mjs';
+import {validPushSubscription,walletPayload,walletProgress} from './policy.mjs';
+import {renderArt,iconFor} from './art.mjs';
 
 const env=(key:string)=>Deno.env.get(key)||'';
 const options={auth:{persistSession:false,autoRefreshToken:false}};
@@ -24,12 +25,12 @@ async function card(token:string){
  if(portal.error)throw new Error('No se pudo obtener el enlace del negocio.');
  const d=await service.from('card_presentation').select('*').eq('business_id',b.data.id).maybeSingle();
  if(d.error)throw new Error('No se pudo consultar el diseño.');
- const branding=await service.from('business_branding').select('logo_path').eq('business_id',b.data.id).maybeSingle();
+ const branding=await service.from('business_branding').select('logo_path,progress_emoji').eq('business_id',b.data.id).maybeSingle();
  if(branding.error)throw new Error('No se pudo consultar el logotipo del negocio.');
  const logoPath=branding.data?.logo_path;
  const businessLogo=logoPath?service.storage.from('business-assets').getPublicUrl(logoPath).data.publicUrl:'';
  const logoUrl=businessLogo||d.data?.logo_url||new URL('icons/icon-512.png',base).href;
- return {customer:c.data,business:b.data,modules:moduleResult.data,portalCode:portal.data.public_code,design:{...d.data,logo_url:logoUrl}};
+ return {progressSymbol:branding.data?.progress_emoji,customer:c.data,business:b.data,modules:moduleResult.data,portalCode:portal.data.public_code,design:{...d.data,logo_url:logoUrl}};
 }
 
 async function googleAuth(){
@@ -42,19 +43,33 @@ async function googleAuth(){
  if(!authResponse.ok)throw new Error('Google no aceptó las credenciales de Wallet.');
  const auth=await authResponse.json();return {auth,key,credentials};
 }
-async function googleSave(context:any){
+async function googleSave(context:any,refreshOnly=false){
+ if(refreshOnly&&!walletReady())return {skipped:true};
  const {auth,key,credentials}=await googleAuth();
- const payload=walletPayload({...context,issuer:env('GOOGLE_WALLET_ISSUER_ID'),base});
+ if(refreshOnly){
+  const id=`${env('GOOGLE_WALLET_ISSUER_ID')}.customer_${context.customer.id.replaceAll('-','')}`;
+  const exists=await fetch(`https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${id}`,{headers:{Authorization:`Bearer ${auth.access_token}`}});
+  if(exists.status===404)return {skipped:true};
+  if(!exists.ok)throw new Error('No se pudo consultar el pase guardado.');
+ }
+ const balance=await service.rpc('get_loyalty_card',{card_token:context.customer.qr_token});
+ if(balance.error)throw new Error('No se pudo consultar el saldo de visitas.');
+ const progress=walletProgress(balance.data);
+ const art=new URL(env('SUPABASE_URL')+'/functions/v1/loyalty-v2');
+ art.search=new URLSearchParams({action:'art',v:'1',done:String(progress.done),total:String(progress.total),bg:context.design.background_color||'#111112',accent:context.design.primary_color||'#e1b85d',icon:iconFor(context.progressSymbol)}).toString();
+ const updatedAt=new Date().toISOString();
+ const payload=walletPayload({...context,issuer:env('GOOGLE_WALLET_ISSUER_ID'),base,progress,artUrl:art.href,updatedAt});
  for(const [resource,id,body] of [['loyaltyClass',payload.classId,payload.passClass],['loyaltyObject',payload.objectId,payload.passObject]] as const){
   const root=`https://walletobjects.googleapis.com/walletobjects/v1/${resource}`;
   const headers={Authorization:`Bearer ${auth.access_token}`,'Content-Type':'application/json'};
   const current=await fetch(`${root}/${id}`,{headers});
   if(current.status!==404&&!current.ok)throw new Error('No se pudo consultar el pase en Google Wallet.');
   const data:Record<string,unknown>={...body};
-  if(resource==='loyaltyClass')data.reviewStatus='UNDER_REVIEW';
+  if(resource==='loyaltyClass'&&current.status!==404)delete data.reviewStatus;
   const saved=await fetch(current.status===404?root:`${root}/${id}`,{method:current.status===404?'POST':'PATCH',headers,body:JSON.stringify(data)});
   if(!saved.ok&&saved.status!==409)throw new Error('Google Wallet rechazó el pase. Revisa la cuenta de emisor y su aprobación.');
  }
+ if(refreshOnly)return {updated:true};
  const jwt=await new SignJWT({iss:credentials.client_email,aud:'google',typ:'savetowallet',origins:[new URL(base).origin],payload:{loyaltyObjects:[{id:payload.objectId}]}}).setProtectedHeader({alg:'RS256'}).setIssuedAt().sign(key);
  return {url:`https://pay.google.com/gp/v/save/${jwt}`};
 }
@@ -63,6 +78,11 @@ Deno.serve(async(request:Request)=>{
  if(request.method==='OPTIONS')return new Response('ok',{headers:cors});
  if(!['GET','POST'].includes(request.method))return reply(405,{error:'Método no permitido.'});
  try{
+  const artRequest=new URL(request.url);
+  if(request.method==='GET'&&artRequest.searchParams.get('action')==='art'){
+   if(artRequest.search.length>600)return reply(400,{error:'Imagen inválida.'});
+   return new Response(renderArt(Object.fromEntries(artRequest.searchParams)),{headers:{'Content-Type':'image/png','Cache-Control':'public, max-age=31536000, immutable','Access-Control-Allow-Origin':'*','X-Content-Type-Options':'nosniff'}});
+  }
   if(!base.startsWith('https://')||!base.endsWith('/'))throw new Error('Configura PUBLIC_APP_URL con HTTPS y / al final.');
   const url=new URL(request.url);
   const body=request.method==='GET'?Object.fromEntries(url.searchParams):await request.json();
@@ -122,7 +142,7 @@ Deno.serve(async(request:Request)=>{
    }
    return reply(200,{accepted,failed,processed:claimed.data.subscriptions.length,message:'Aceptadas por el proveedor; no garantiza lectura. Pulsa de nuevo para procesar pendientes o reintentos.'});
   }
-  if(!['config','manifest','subscribe','unsubscribe','wallet'].includes(action))return reply(400,{error:'Acción inválida.'});
+  if(!['config','manifest','subscribe','unsubscribe','wallet','refresh_wallet'].includes(action))return reply(400,{error:'Acción inválida.'});
   const context=await card(body.token);
   if(action==='config'){
    let subscribed=false;
@@ -135,6 +155,7 @@ Deno.serve(async(request:Request)=>{
   }
   if(request.method!=='POST')return reply(405,{error:'Usa POST.'});
   if(action==='wallet')return reply(200,await googleSave(context));
+  if(action==='refresh_wallet')return reply(200,await googleSave(context,true));
   if(action==='unsubscribe'){
    const removed=await service.from('card_push_subscriptions').delete().eq('customer_id',context.customer.id).eq('endpoint',body.endpoint);
    if(removed.error)throw removed.error;return reply(200,{success:true});

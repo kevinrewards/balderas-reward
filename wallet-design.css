@@ -1,0 +1,6 @@
+.walletPreview{max-width:360px;margin:20px auto;border-radius:26px;overflow:hidden;box-shadow:0 12px 35px #0002;font-family:Arial,sans-serif;text-align:left}
+.walletPreview header{display:flex;align-items:center;gap:12px;padding:22px 24px 12px}.walletPreview header img{width:46px;height:46px;object-fit:contain;border-radius:50%;background:#fff}
+.walletPreview small{display:block;opacity:.75;font-size:12px;line-height:1.5}.walletPreview strong{display:block;line-height:1.4;overflow-wrap:anywhere}
+.walletNumbers{display:flex;justify-content:space-between;padding:12px 24px}.walletNumbers strong{font-size:26px;font-weight:500}
+#walletPreviewArt{display:block;width:100%;height:auto;aspect-ratio:1032/812;object-fit:contain}
+.walletReward{padding:10px 24px 20px}.walletReward strong{font-size:15px}.walletQrExample{background:#fff;color:#444;border-radius:12px;margin:0 24px 24px;padding:24px;text-align:center;font-size:13px;border:1px dashed #bbb}
