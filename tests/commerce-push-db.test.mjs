@@ -1,0 +1,47 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
+const {PGlite}=await import(process.env.PGLITE_MODULE||'@electric-sql/pglite');
+const id=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
+test('Push consent, event queue, tenant privacy, leases, retries, one-use tickets and cancellation',async()=>{
+ const db=new PGlite();try{
+ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role;GRANT USAGE ON SCHEMA public TO anon,authenticated,service_role;
+ CREATE TABLE businesses(id uuid PRIMARY KEY,name text,active boolean);CREATE TABLE business_modules(business_id uuid PRIMARY KEY,agenda boolean,timezone text);
+ CREATE TABLE commerce_requests(id uuid PRIMARY KEY,business_id uuid,tracking_token uuid,status text,confirmed_at timestamptz,created_at timestamptz DEFAULT now(),updated_at timestamptz DEFAULT now());
+ CREATE TABLE commerce_events(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,request_id uuid,actor text,snapshot jsonb,created_at timestamptz DEFAULT now());
+ CREATE FUNCTION commerce_access(bid uuid,op text) RETURNS boolean LANGUAGE sql AS $$SELECT bid::text=current_setting('test.business',true)$$;
+ INSERT INTO businesses VALUES('${id(1)}','A',true),('${id(2)}','B',true);
+ INSERT INTO business_modules VALUES('${id(1)}',true,'America/Mazatlan'),('${id(2)}',true,'America/Mazatlan');
+ INSERT INTO commerce_requests(id,business_id,tracking_token,status)VALUES('${id(11)}','${id(1)}','${id(21)}','pending'),('${id(12)}','${id(2)}','${id(22)}','pending');`);
+ await db.exec(await readFile(new URL('../supabase/migrations/20261010_commerce_notifications.sql',import.meta.url),'utf8'));
+ const sub={endpoint:'https://fcm.googleapis.com/test',p256dh:'a'.repeat(87),auth:'b'.repeat(22)};
+ const subscribe=(token,action='subscribe',s=sub)=>db.query('SELECT commerce_push_subscription($1,$2,$3::jsonb) AS x',[token,action,JSON.stringify(s)]);
+ const event=async(status,actor='Negocio',note='')=>db.query('INSERT INTO commerce_events(request_id,actor,snapshot) VALUES($1,$2,$3) RETURNING id',[id(11),actor,JSON.stringify({status,business_note:note})]);
+ await db.exec('SET ROLE anon');await assert.rejects(subscribe(id(21)),/permission denied/);await assert.rejects(db.query('SELECT * FROM commerce_push_wakes'),/permission denied/);await db.exec('RESET ROLE');
+ await assert.rejects(subscribe(id(99)),/no encontrada/);
+ await event('pending','Cliente');assert.equal((await db.query('SELECT count(*) FROM commerce_push_deliveries')).rows[0].count,0);
+ await subscribe(id(21));assert.equal((await subscribe(id(21),'config')).rows[0].x.subscribed,true);assert.equal((await subscribe(id(22),'config')).rows[0].x.subscribed,false);
+ await event('confirmed');assert.equal((await db.query('SELECT count(*) FROM commerce_push_deliveries')).rows[0].count,1);
+ await event('confirmed');assert.equal((await db.query("SELECT count(*) FROM commerce_push_deliveries WHERE status='pending'")).rows[0].count,1);
+ await event('confirmed','Negocio','Cambio de hora');let d=(await db.query("SELECT status FROM commerce_push_deliveries ORDER BY event_id")).rows;assert.deepEqual(d.map(x=>x.status),['skipped','skipped','pending']);
+ const claim=async()=>(await db.query('SELECT commerce_push_claim() AS x')).rows[0].x;
+ const first=await claim();assert.equal(first.length,1);assert.equal((await claim()).length,0);
+ const finish=(lease,status)=>db.query('SELECT commerce_push_finish($1,$2,$3) AS x',[first[0].id,lease,status]);
+ assert.equal((await finish(id(99),'accepted')).rows[0].x,false);assert.equal((await finish(first[0].lease,'failed')).rows[0].x,true);assert.equal((await claim()).length,0);
+ await db.exec("UPDATE commerce_push_deliveries SET next_attempt_at=now()-interval '1 minute' WHERE status='failed'");assert.equal((await claim()).length,1);
+ await db.exec("UPDATE commerce_push_deliveries SET updated_at=now()-interval '4 minutes' WHERE status='sending'");assert.equal((await claim()).length,0);assert.equal((await db.query("SELECT count(*) FROM commerce_push_deliveries WHERE status='uncertain'")).rows[0].count,1);
+ await db.exec(`SELECT set_config('test.business','${id(2)}',false);SET ROLE authenticated;`);await assert.rejects(db.query('SELECT commerce_push_report($1)',[id(1)]),/No tienes acceso/);await db.exec('RESET ROLE');
+ await db.exec(`SELECT set_config('test.business','${id(1)}',false);`);const report=(await db.query('SELECT commerce_push_report($1) AS x',[id(1)])).rows[0].x;assert.equal(report[0].devices,1);assert.equal(report[0].attention,1);assert(!JSON.stringify(report).includes('endpoint'));
+ const wake=(await db.query('INSERT INTO commerce_push_wakes DEFAULT VALUES RETURNING nonce')).rows[0].nonce;
+ assert.equal((await db.query('SELECT commerce_push_consume_wake($1) AS x',[wake])).rows[0].x,true);assert.equal((await db.query('SELECT commerce_push_consume_wake($1) AS x',[wake])).rows[0].x,false);
+ await event('cancelled');assert.equal((await claim()).length,1);
+ await subscribe(id(21),'unsubscribe');assert.equal((await claim()).length,0);assert.equal((await subscribe(id(21),'config')).rows[0].x.subscribed,false);
+ await subscribe(id(21));await event('confirmed');await db.exec(`UPDATE business_modules SET agenda=false WHERE business_id='${id(1)}'`);assert.equal((await claim()).length,0);
+ await db.exec(`CREATE SCHEMA net;CREATE TABLE net.sent(body jsonb,headers jsonb);CREATE FUNCTION net.http_post(url text,headers jsonb,body jsonb,timeout_milliseconds integer) RETURNS bigint LANGUAGE plpgsql AS $$BEGIN INSERT INTO net.sent VALUES(body,headers);RETURN 1;END $$;
+ CREATE SCHEMA cron;CREATE TABLE cron.job(jobid bigint,jobname text,command text);CREATE FUNCTION cron.schedule(name text,schedule text,command text) RETURNS bigint LANGUAGE plpgsql AS $$BEGIN INSERT INTO cron.job VALUES(1,name,command);RETURN 1;END $$;`);
+ const cronSQL=(await readFile(new URL('../supabase/migrations/20261010_commerce_notifications_cron.sql',import.meta.url),'utf8')).replace(/^CREATE EXTENSION.*\n/gm,'');await db.exec(cronSQL);
+ await db.query('SELECT commerce_push_tick()');assert.equal((await db.query('SELECT count(*) FROM net.sent')).rows[0].count,0);
+ await db.exec(`UPDATE business_modules SET agenda=true WHERE business_id='${id(1)}'`);await event('confirmed','Negocio','Nuevo cambio');await db.query('SELECT commerce_push_tick()');
+ const wakeRequest=(await db.query('SELECT * FROM net.sent')).rows[0];assert.equal(wakeRequest.body.action,'dispatch');assert(wakeRequest.body.ticket);assert.deepEqual(wakeRequest.headers,{'Content-Type':'application/json'});
+ assert.equal((await db.query('SELECT commerce_push_consume_wake($1) AS x',[wakeRequest.body.ticket])).rows[0].x,true);
+ await db.exec('SET ROLE authenticated');await assert.rejects(db.query('SELECT commerce_push_tick()'),/permission denied/);await db.exec('RESET ROLE');
+ }finally{await db.close()}
+});
