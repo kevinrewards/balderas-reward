@@ -60,6 +60,17 @@ async function loadCard() {
   }
 
   const first = data[0];
+  // Optional business links; a network error must not prevent opening the loyalty card.
+  db.rpc('commerce_for_card',{card_token:token}).then(({data:portal})=>{
+    if(!portal)return;
+    document.getElementById('businessPortalLinks')?.remove();
+    const box=document.createElement('div');box.id='businessPortalLinks';box.className='commerceActions';
+    for(const [key,hash] of [['catalog','catalogo'],['agenda','solicitud']])if(portal[key]){
+      const a=document.createElement('a'),u=new URL('negocio.html',location.href);u.searchParams.set('negocio',portal.code);u.hash=hash;a.href=u.href;a.textContent=portal[key+'_label'];box.appendChild(a);
+    }
+    $('loyaltyCard').appendChild(box);
+  }).catch(()=>{});
+
   currentProgressDesign = await window.LoyaltyProgress.forToken(db, token);
 
   const available =

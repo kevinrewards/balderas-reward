@@ -6,3 +6,6 @@ verify_jwt = false
 # Public registration. SQL creation is service-role only; the function validates every request.
 [functions.customer-registration]
 verify_jwt = false
+
+[functions.commerce]
+verify_jwt = false
