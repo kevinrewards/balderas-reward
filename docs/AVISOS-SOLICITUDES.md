@@ -2,6 +2,10 @@
 
 Incluye la corrección de símbolos Wallet: utiliza progress_emoji y empty_emoji del negocio, con figuras Twemoji en color y círculos/estrellas básicos. Conserva visitas, canjes y enlaces. Estos avisos son Web Push independientes del programa de lealtad y sirven también a negocios que solo tienen agenda.
 
+## Corrección posterior de carga de figuras
+
+Después de instalar el ZIP, usar release/08-wallet-symbols-corregido.txt para reemplazar symbols.mjs en loyalty-v2 y publicar. Incluye 28 figuras habituales localmente (incluida 🍱), evitando la consulta a Netlify para ellas. Las demás siguen utilizando los recursos web del paquete. El ZIP original contiene la primera versión; este archivo la sustituye.
+
 ## Instalación
 
 1. Extraer BALDERAS-Reward-avisos-y-wallet-v2.zip.

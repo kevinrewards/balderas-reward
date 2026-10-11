@@ -21,3 +21,12 @@ test('Different pending symbol is preserved and unavailable graphics never silen
  await assert.rejects(loadSymbols({icon:'漢',done:1},async url=>{assert.match(url,/^https:\/\/balderas-reward.netlify.app\/icons\/wallet-emoji-v2\/[a-f0-9-]+\.bin$/);return new Response('',{status:404})}));
  assert.deepEqual(await loadSymbols({total:100,icon:'漢'},()=>{throw Error('should not fetch')}),{});
 });
+
+test('Business food and preset graphics work even when Netlify is unavailable',async()=>{
+ const {loadSymbols:uncached}=await import('../supabase/functions/loyalty-v2/symbols.mjs?offline');
+ for(const icon of ['🍱','📷','🎄','🎃','❤️','☕','🎁']){
+  const values={icon,empty:'○',done:2,total:10};
+  const sprites=await uncached(values,()=>{throw Error('Network unavailable')});
+  assert(sprites[icon]);assert(renderArt({...values,sprites}).length>100);
+ }
+});
